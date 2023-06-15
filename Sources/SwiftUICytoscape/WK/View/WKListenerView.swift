@@ -1,7 +1,7 @@
 
 import SwiftUI
 import WebKit
-
+import ComposableArchitecture
 
 public struct WKListenQueueJSView: View {
     //let coordinator: WKCoordinator
@@ -15,11 +15,13 @@ public struct WKListenQueueJSView: View {
 }
 
 public struct WKListenWKCoordinatorNotificationView : View{
-    
+    let store : StoreOf<WKReducer>
     public var body: some View {
-        EmptyView()
-            .onReceive(NotificationCenter.default.publisher(for: .WKCoordinatorNotification)) { value in
-                
-            }
+        WithViewStore(self.store, observe: {$0}) { viewStore in
+            EmptyView()
+                .onReceive(NotificationCenter.default.publisher(for: .WKCoordinatorNotification)) { value in
+                    viewStore.send(.receiveMessage(value.object as! WKScriptMessage))
+                }
+        }
     }
 }

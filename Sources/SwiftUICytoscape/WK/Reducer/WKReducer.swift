@@ -9,20 +9,17 @@ import ComposableArchitecture
 import WebKit
 
 
-struct WKReducter : ReducerProtocol{
+public struct WKReducer : ReducerProtocol{
     
-    struct State: Equatable{
-        
+    public struct State: Equatable{
+        public init(){}
     }
-    enum Action : Equatable{
+    public enum Action : Equatable{
         case receiveMessage(WKScriptMessage)
         case queueJS(String)
         
     }
-    enum CancelID {
-        case listener
-    }
-    func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+    public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action{
         case .queueJS(let value):
             NotificationCenter.default.post(name: .WKCoordinatorQueueJS, object: value)

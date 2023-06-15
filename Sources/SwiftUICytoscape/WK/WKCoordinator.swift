@@ -13,7 +13,7 @@ import SwiftUI
 private struct WKCoordinatorEnvironmentKey: EnvironmentKey {
     static let defaultValue = WKCoordinator()
 }
-extension EnvironmentValues {
+public extension EnvironmentValues {
   var wkCoordinator: WKCoordinator {
     get { self[WKCoordinatorEnvironmentKey.self] }
     set { self[WKCoordinatorEnvironmentKey.self] = newValue }
@@ -35,17 +35,18 @@ public class WKCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandl
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
-
+print(message)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             NotificationCenter.default.post(name: .WKCoordinatorNotification, object: message)
         }
     }
     public func queueJS(js: String){
+        print(js)
         self.webView?.evaluateJavaScript(js)
     }
     
     public static func  loadJSFile(fileName: String, inDirectory: String?, injectionTime : WKUserScriptInjectionTime = .atDocumentStart, forMainFrameOnly: Bool = true)->WKUserScript{
-        let filepath = Bundle.main.path(forResource: fileName, ofType: "js" , inDirectory: inDirectory)!
+        let filepath = Bundle.module.path(forResource: fileName, ofType: "js" )!
         let jsString = try! String(contentsOfFile: filepath)
         return WKUserScript(source: jsString, injectionTime: injectionTime, forMainFrameOnly: forMainFrameOnly)
     }
