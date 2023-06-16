@@ -1,9 +1,11 @@
+var cy;
+
 document.addEventListener('DOMContentLoaded', function () {
           webkit.messageHandlers.DOMContentLoaded.postMessage('DOMContentLoaded')
 });
 
 function configCytoscape(data){
-            var cy = cytoscape({
+            cy = cytoscape({
                 container: document.getElementById("cy"),
                 style: [
                     {
@@ -16,8 +18,7 @@ function configCytoscape(data){
                     {
                         selector: 'edge',
                         style: {
-                            'curve-style': 'bezier',
-                            'target-arrow-shape': 'triangle'
+                            'curve-style': 'bezier'
                         }
                     }
                 ],

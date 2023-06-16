@@ -13,20 +13,27 @@ public struct CytoscapeWebView: View {
     public init(store: StoreOf<CytoscapeReducer>) {
         self.store = store
     }
+    @ViewBuilder
+    public var wkListenerView : some View{
+        Group{
+            WKListenWKCoordinatorNotificationView(store: store.scope(state: \.wkReducerState, action: CytoscapeReducer.Action.joinActionWKReducer))
+            WKListenQueueJSView()
+        }
+    }
     public var wkSwiftUIWebView : WKSwiftUIWebView{
         
         let htmlFileUrl = Bundle.module.url(forResource: "index", withExtension: "html")!
-        let eventNames = CytoscapeReducer.JavascriptEvent.allCases.map({$0.rawValue})
+        let eventNames = CytoscapeReducer.JavascriptEvent.EventName.allCases.map({$0.rawValue})
         return WKSwiftUIWebView(eventNames: eventNames, jsDirectory: "Javascript", jsLibraryFiles: ["cytoscape.min","cytoscape.event"], htmlFileUrl: htmlFileUrl)
     }
     public var body: some View {
         Group{
-            WKListenWKCoordinatorNotificationView(store: store.scope(state: \.wkReducerState, action: CytoscapeReducer.Action.joinActionWKReducer))
+            wkListenerView
             wkSwiftUIWebView
-            WKListenQueueJSView()
+            
 //            WithViewStore(self.store, observe: {$0}) { viewStore in
 //                Button {
-//                    viewStore.send(.joinActionWKReducer(.queueJS(CytoscapeReducer.JavascriptQueue.configCytoscape(viewStore.state.graph).jsString)))
+//                    viewStore.send(.queueJS(.cyAdd))
 //                } label: {
 //                    Text("test")
 //                }
