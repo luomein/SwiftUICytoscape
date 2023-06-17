@@ -8,7 +8,13 @@
 import SwiftUI
 import WebKit
 
-public struct WKSwiftUIWebView: UIViewRepresentable {
+#if os(macOS)
+public typealias ViewRepresentable = NSViewRepresentable
+#elseif os(iOS)
+public typealias ViewRepresentable = UIViewRepresentable
+#endif
+
+public struct WKSwiftUIWebView: ViewRepresentable {
     @Environment(\.wkCoordinator) private var coordinator: WKCoordinator
     let eventNames : [String]
     let jsDirectory : String
@@ -19,6 +25,9 @@ public struct WKSwiftUIWebView: UIViewRepresentable {
         self.jsDirectory = jsDirectory
         self.jsLibraryFiles = jsLibraryFiles
         self.htmlFileUrl = htmlFileUrl
+    }
+    public func makeNSView(context: Context) -> WKWebView {
+        return makeUIView(context: context)
     }
     public func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -36,7 +45,9 @@ public struct WKSwiftUIWebView: UIViewRepresentable {
         
         return _wkwebview
     }
-    
+    public func updateNSView(_ nsView: WKWebView, context: Context) {
+        updateUIView(nsView, context: context)
+    }
     public func updateUIView(_ uiView: WKWebView, context: Context) {
         
         uiView.loadFileURL(htmlFileUrl,allowingReadAccessTo: htmlFileUrl)
