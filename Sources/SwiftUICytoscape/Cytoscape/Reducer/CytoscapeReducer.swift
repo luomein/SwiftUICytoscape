@@ -9,13 +9,16 @@ import Foundation
 import ComposableArchitecture
 
 public struct CytoscapeReducer : ReducerProtocol{
-    public init(){}
+    let initGraph : CyGraphData
+    public init(initGraph: CyGraphData) {
+        self.initGraph = initGraph
+    }
     public struct State: Equatable{
-        public var graph : GraphData
+        //public var graph : CyGraphData
         public var wkReducerState : WKReducer.State
         
-        public init(graph: GraphData, wkReducerState: WKReducer.State) {
-            self.graph = graph
+        public init( wkReducerState: WKReducer.State) {
+            //self.graph = graph
             self.wkReducerState = wkReducerState
         }
     }
@@ -41,8 +44,8 @@ public struct CytoscapeReducer : ReducerProtocol{
         }
     }
     public enum JavascriptQueue : Equatable {
-        case configCytoscape(GraphData)
-        case cyAdd(GraphData)
+        case configCytoscape(CyGraphData)
+        case cyAdd(CyGraphData)
         case cyRemove(id: String)
         
         var jsString : String{
@@ -62,18 +65,21 @@ cy.remove( j );
     }
     public enum Action : Equatable{
         case joinActionWKReducer(WKReducer.Action)
-        case configCytoscape(GraphData)
+        case configCytoscape(CyGraphData)
         case queueJS(JavascriptQueue)
+        case initGraph
     }
     public var body: some ReducerProtocol<State, Action> {
         Scope(state: \.wkReducerState, action: /Action.joinActionWKReducer, child: {WKReducer()})
         Reduce{state, action in
             switch action{
+            case .initGraph:
+                return .send(.configCytoscape(initGraph))
             case .queueJS(let value):
                 return .send(.joinActionWKReducer(.queueJS(value.jsString)))
             case .configCytoscape(let value):
-                state.graph = value
-                return .send(.queueJS(.configCytoscape(state.graph)))
+                //state.graph = value
+                return .send(.queueJS(.configCytoscape(value)))
                 //                return .send(.joinActionWKReducer(.queueJS(JavascriptQueue.configCytoscape(state.graph).jsString)))
             case .joinActionWKReducer(let subAction):
                 switch subAction{
@@ -81,7 +87,7 @@ cy.remove( j );
                     let jsEvent = JavascriptEvent.EventName(rawValue: value.name)!.initJavascriptEvent(eventValue: value.body)
                     switch jsEvent{
                     case .DOMContentLoaded:
-                        return .send(.configCytoscape(state.graph))
+                        return .send(.initGraph)
                     }
                 default:
                     break

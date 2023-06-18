@@ -3,7 +3,7 @@ import XCTest
 
 final class SwiftUICytoscapeTests: XCTestCase {
     func testExample() throws {
-        let graph = GraphData(nodes: [.init(data: .init(id: "a", label: "adfsd"))], edges: [])
+        let graph = CyGraphData(nodes: [.init(data: .init(id: "a", label: "adfsd"))], edges: [])
         print(graph.jsonString)
     }
 }

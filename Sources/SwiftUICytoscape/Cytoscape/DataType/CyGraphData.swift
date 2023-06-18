@@ -8,15 +8,15 @@
 import Foundation
 import IdentifiedCollections
 
-public struct Node: Codable, Identifiable, Equatable {
-    let data : NodeData
+public struct CyNode: Codable, Identifiable, Equatable {
+    let data : CyNodeData
     public var id : String{
         return data.id
     }
-    public init(data: NodeData) {
+    public init(data: CyNodeData) {
         self.data = data
     }
-    public struct NodeData: Codable, Equatable{
+    public struct CyNodeData: Codable, Equatable{
         let id: String
         let label: String
         public init(id: String, label: String) {
@@ -28,15 +28,15 @@ public struct Node: Codable, Identifiable, Equatable {
     // ...
 }
 
-public struct Edge: Codable, Identifiable, Equatable  {
-    let data : EdgeData
-    public init(data: EdgeData) {
+public struct CyEdge: Codable, Identifiable, Equatable  {
+    let data : CyEdgeData
+    public init(data: CyEdgeData) {
         self.data = data
     }
     public var id : String{
         return data.id
     }
-    public struct EdgeData: Codable, Equatable{
+    public struct CyEdgeData: Codable, Equatable{
         let id: String
         let source: String
         let target: String
@@ -50,10 +50,10 @@ public struct Edge: Codable, Identifiable, Equatable  {
     // ...
 }
 
-public struct GraphData: Codable, Equatable {
-    var nodes: [Node]
-    var edges: [Edge]
-    public init(nodes: [Node], edges: [Edge]) {
+public struct CyGraphData: Codable, Equatable {
+    var nodes: [CyNode]
+    var edges: [CyEdge]
+    public init(nodes: [CyNode], edges: [CyEdge]) {
         self.nodes = nodes
         self.edges = edges
     }
