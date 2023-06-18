@@ -43,7 +43,7 @@ public struct CytoscapeReducer : ReducerProtocol{
     public enum JavascriptQueue : Equatable {
         case configCytoscape(GraphData)
         case cyAdd(GraphData)
-        
+        case cyRemove(id: String)
         
         var jsString : String{
             switch self{
@@ -52,7 +52,11 @@ public struct CytoscapeReducer : ReducerProtocol{
             case .cyAdd(let value):
             
                 return "cy.add(\(value.jsonString));cy.layout({name:'grid'}).run();"
-                
+            case .cyRemove(let id):
+                return """
+var j = cy.$('#\(id)');
+cy.remove( j );
+"""
             }
         }
     }

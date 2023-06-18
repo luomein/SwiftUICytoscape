@@ -10,6 +10,7 @@ import ComposableArchitecture
 
 public struct CytoscapeWebView: View {
     let store : StoreOf<CytoscapeReducer>
+    let wkCoordinator = WKCoordinator()
     public init(store: StoreOf<CytoscapeReducer>) {
         self.store = store
     }
@@ -40,6 +41,7 @@ public struct CytoscapeWebView: View {
 //
 //            }
         }
+        .environment(\.wkCoordinator, wkCoordinator)
     }
 }
 
