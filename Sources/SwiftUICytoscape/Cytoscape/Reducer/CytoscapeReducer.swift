@@ -71,6 +71,7 @@ cy.remove( j );
             case .cyStyle(let value):
                 return """
 cy.style()
+.clear()
 .fromJson(\(value.jsonString))
 .update();
 """

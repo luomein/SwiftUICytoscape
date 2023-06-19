@@ -17,7 +17,7 @@ public extension Array where Element: Codable {
 
 public struct CyStyle : Codable, Equatable{
     
-    public static var defaultStyle : [Self] = [.init(selector: "node", style: .init(content: "data(id)")) ,
+    public static var defaultStyle : [Self] = [.init(selector: "node", style: .init(content: "data(label)")) ,
                                            .init(selector: "edge", style: .init(curveStyle: "bezier"))
     ]
     public static var testStyle : [Self] = [.init(selector: "node", style: .init(content: "data(id)" , shape: .roundTriangle)) ,

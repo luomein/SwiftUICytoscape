@@ -10,11 +10,13 @@ import IdentifiedCollections
 
 public struct CyNode: Codable, Identifiable, Equatable {
     let data : CyNodeData
+    let classes : [String]?
     public var id : String{
         return data.id
     }
-    public init(data: CyNodeData) {
+    public init(data: CyNodeData, classes : [String]? = nil) {
         self.data = data
+        self.classes = classes
     }
     public struct CyNodeData: Codable, Equatable{
         let id: String
