@@ -6,4 +6,9 @@ final class SwiftUICytoscapeTests: XCTestCase {
         let graph = CyGraphData(nodes: [.init(data: .init(id: "a", label: "adfsd"))], edges: [])
         print(graph.jsonString)
     }
+    func testStyleJson(){
+//        let jsonData = try! JSONEncoder().encode(CyStyle.defaultStyle)
+//        print(String(data: jsonData, encoding: .utf8)!)
+        print(CyStyle.testStyle.jsonString)
+    }
 }

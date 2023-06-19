@@ -19,9 +19,9 @@ public extension EnvironmentValues {
     set { self[WKCoordinatorEnvironmentKey.self] = newValue }
   }
 }
-public class WKCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+public class WKCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, Identifiable {
     var webView: WKWebView?
-    
+    public var id: UUID = UUID()
     public override init() {
         
     }
@@ -37,7 +37,7 @@ public class WKCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandl
     ) {
 print(message)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            NotificationCenter.default.post(name: .WKCoordinatorNotification, object: message)
+            NotificationCenter.default.post(name: .WKCoordinatorNotification, object: message, userInfo: ["id": self.id])
         }
     }
     public func queueJS(js: String){

@@ -13,12 +13,13 @@ public struct CytoscapeWebView: View {
     let wkCoordinator = WKCoordinator()
     public init(store: StoreOf<CytoscapeReducer>) {
         self.store = store
+        
     }
     @ViewBuilder
     public var wkListenerView : some View{
         Group{
             WKListenWKCoordinatorNotificationView(store: store.scope(state: \.wkReducerState, action: CytoscapeReducer.Action.joinActionWKReducer))
-            WKListenQueueJSView()
+            //WKListenQueueJSView()
         }
     }
     public var wkSwiftUIWebView : WKSwiftUIWebView{
@@ -34,7 +35,7 @@ public struct CytoscapeWebView: View {
             
 //            WithViewStore(self.store, observe: {$0}) { viewStore in
 //                Button {
-//                    viewStore.send(.queueJS(.cyAdd))
+//                    viewStore.send(.queueJS(.cyStyle(CyStyle.testStyle)))
 //                } label: {
 //                    Text("test")
 //                }

@@ -10,8 +10,15 @@ import ComposableArchitecture
 
 public struct CytoscapeReducer : ReducerProtocol{
     let initGraph : CyGraphData
-    public init(initGraph: CyGraphData) {
+    let initStyle : [CyStyle]
+    let isSelfInitGraph : Bool
+    public init(initGraph: CyGraphData = .init(nodes: [], edges: []),
+                isSelfInitGraph : Bool = false,
+                initStyle : [CyStyle] = CyStyle.defaultStyle
+    ) {
         self.initGraph = initGraph
+        self.isSelfInitGraph = isSelfInitGraph
+        self.initStyle = initStyle
     }
     public struct State: Equatable{
         //public var graph : CyGraphData
@@ -44,14 +51,15 @@ public struct CytoscapeReducer : ReducerProtocol{
         }
     }
     public enum JavascriptQueue : Equatable {
-        case configCytoscape(CyGraphData)
+        case configCytoscape(CyGraphData,[CyStyle])
         case cyAdd(CyGraphData)
         case cyRemove(id: String)
+        case cyStyle([CyStyle])
         
         var jsString : String{
             switch self{
-            case .configCytoscape(let value):
-                return "configCytoscape(\(value.jsonString));"
+            case .configCytoscape(let value, let style):
+                return "configCytoscape(\(value.jsonString), \(style.jsonString) );"
             case .cyAdd(let value):
             
                 return "cy.add(\(value.jsonString));cy.layout({name:'grid'}).run();"
@@ -60,12 +68,18 @@ public struct CytoscapeReducer : ReducerProtocol{
 var j = cy.$('#\(id)');
 cy.remove( j );
 """
+            case .cyStyle(let value):
+                return """
+cy.style()
+.fromJson(\(value.jsonString))
+.update();
+"""
             }
         }
     }
     public enum Action : Equatable{
         case joinActionWKReducer(WKReducer.Action)
-        case configCytoscape(CyGraphData)
+        case configCytoscape(CyGraphData, [CyStyle])
         case queueJS(JavascriptQueue)
         case initGraph
     }
@@ -74,16 +88,19 @@ cy.remove( j );
         Reduce{state, action in
             switch action{
             case .initGraph:
-                return .send(.configCytoscape(initGraph))
+                if isSelfInitGraph{
+                    return .send(.configCytoscape(initGraph, initStyle))
+                }
+                
             case .queueJS(let value):
                 return .send(.joinActionWKReducer(.queueJS(value.jsString)))
-            case .configCytoscape(let value):
+            case .configCytoscape(let value, let style):
                 //state.graph = value
-                return .send(.queueJS(.configCytoscape(value)))
+                return .send(.queueJS(.configCytoscape(value, style)))
                 //                return .send(.joinActionWKReducer(.queueJS(JavascriptQueue.configCytoscape(state.graph).jsString)))
             case .joinActionWKReducer(let subAction):
                 switch subAction{
-                case .receiveMessage(let value):
+                case .receiveMessage(let value, _):
                     let jsEvent = JavascriptEvent.EventName(rawValue: value.name)!.initJavascriptEvent(eventValue: value.body)
                     switch jsEvent{
                     case .DOMContentLoaded:

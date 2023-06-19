@@ -4,24 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
           webkit.messageHandlers.DOMContentLoaded.postMessage('DOMContentLoaded')
 });
 
-function configCytoscape(data){
+function configCytoscape(data, style){
             cy = cytoscape({
                 container: document.getElementById("cy"),
-                style: [
-                    {
-                        selector: 'node',
-                        style: {
-                            'content': 'data(id)'
-                        }
-                    },
-
-                    {
-                        selector: 'edge',
-                        style: {
-                            'curve-style': 'bezier'
-                        }
-                    }
-                ],
+                style: style,
                 elements: data,
                 layout: {
                     name: 'grid'
