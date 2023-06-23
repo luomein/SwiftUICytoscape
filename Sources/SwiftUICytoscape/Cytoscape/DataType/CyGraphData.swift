@@ -53,8 +53,8 @@ public struct CyEdge: Codable, Identifiable, Equatable  {
 }
 
 public struct CyGraphData: Codable, Equatable {
-    var nodes: [CyNode]
-    var edges: [CyEdge]
+    public var nodes: [CyNode]
+    public var edges: [CyEdge]
     public static var emptyGraph : Self = .init(nodes: [], edges: [])
     public init(nodes: [CyNode], edges: [CyEdge]) {
         self.nodes = nodes
