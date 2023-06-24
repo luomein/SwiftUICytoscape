@@ -64,4 +64,7 @@ public struct CyGraphData: Codable, Equatable {
         let jsonData = try! JSONEncoder().encode(self)
         return String(data: jsonData, encoding: .utf8)!
     }
+    public func hasConnection(nodeID_0 : CyNode.ID, nodeID_1 : CyNode.ID)->Bool{
+        return edges.first(where: {($0.data.source == nodeID_0 && $0.data.target == nodeID_1) || ($0.data.source == nodeID_1 && $0.data.target == nodeID_0) }) != nil
+    }
 }
