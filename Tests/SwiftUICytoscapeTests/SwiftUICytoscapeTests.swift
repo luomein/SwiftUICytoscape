@@ -3,7 +3,7 @@ import XCTest
 
 final class SwiftUICytoscapeTests: XCTestCase {
     func testExample() throws {
-        let graph = CyGraphData(nodes: [.init(data: .init(id: "a", label: "adfsd"))], edges: [])
+        let graph = SetDBGraphData(nodes: [.init(data: .init(id: "a", label: "adfsd"))], edges: [])
         print(graph.jsonString)
     }
     func testStyleJson(){

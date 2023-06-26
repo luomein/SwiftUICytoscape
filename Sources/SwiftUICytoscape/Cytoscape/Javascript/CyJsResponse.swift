@@ -1,0 +1,31 @@
+//
+//  File.swift
+//  
+//
+//  Created by MEI YIN LO on 2023/10/9.
+//
+
+import Foundation
+
+public enum CyJsResponse : String, CaseIterable{
+    public enum CyJsResponseEventType : String, Decodable{
+        case click
+        case tap
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let status = try! container.decode(String.self)
+            self = Self(rawValue: status)!
+            
+        }
+    }
+    public struct CyJsResponseData: Decodable, Equatable{
+        public var eventType : CyJsResponseEventType
+        public var targetId : String
+        public var isNode : Bool
+        public var isEdge : Bool
+    }
+    case DOMContentLoaded
+    case CytoscapeEvent
+
+}
