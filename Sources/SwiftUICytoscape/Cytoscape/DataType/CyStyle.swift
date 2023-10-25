@@ -28,7 +28,7 @@ public struct CyStyle : Codable, Equatable, Identifiable{
             return self.rawValue
         }
     }
-    public static var edgeStyle : Self = .init(selector: "edge", style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "yellow",targetArrowShape:.triangle), name: SystemID.edge.name , id:SystemID.edge.rawValue)
+    public static var edgeStyle : Self = .init(selector: "edge", style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle), name: SystemID.edge.name , id:SystemID.edge.rawValue)
     public static var nodeStyle : Self = .init(selector: "node", style: .init(content: "data(label)",backgroundColor: "rgb(255,0,0)")
                                                , name: SystemID.node.name , id:SystemID.node.rawValue)
     public static var defaultStyle : [Self] = [nodeStyle,
