@@ -18,7 +18,7 @@ let package = Package(
             name: "SwiftUICytoscape",
             targets: ["SwiftUICytoscape"]),
     ],
-    dependencies: [.package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "0.53.2"),
+    dependencies: [.package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "0.59.0"),
 ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
