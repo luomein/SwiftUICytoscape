@@ -61,9 +61,47 @@ public struct CyGraphDataReducer : ReducerProtocol{
                         currentGraphEdge.id == newGraphEdge.id
                     } == nil
                 }
+                let removeClassNodes = state.cyGraph.nodes.filter{currentGraphNode in
+                    if let newGraphNode = newGraph.nodes.first(where: { newGraphNode in
+                        currentGraphNode.id == newGraphNode.id
+                    }){
+                        if(currentGraphNode.classes ?? []) != (newGraphNode.classes ?? []){
+                            return !(currentGraphNode.classes ?? []).isEmpty
+                        }
+                    }
+                    return false
+                }
+                let addClassNodes = newGraph.nodes.filter{newGraphNode in
+                    if let existingNode = state.cyGraph.nodes.first(where: { currentGraphNode in
+                        currentGraphNode.id == newGraphNode.id
+                    }){
+                        if(existingNode.classes ?? []) != (newGraphNode.classes ?? []){
+                            return !(newGraphNode.classes ?? []).isEmpty
+                        }
+                    }
+                    return false
+                }
                 state.cyGraph = newGraph
                 return .concatenate(
                     .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: newNodes, edges: newEdges) ) ) ))
+                    ,
+                    .concatenate(
+                        removeClassNodes.flatMap({node in
+                            node.classes!.map({
+                                .send(.joinActionCyCommandReducer(.queueJS(.cyRemoveClass(id: node.id, class: $0) ) ))
+                            })
+                            
+                        })
+                    )
+                    ,
+                    .concatenate(
+                        addClassNodes.flatMap({node in
+                            node.classes!.map({
+                                .send(.joinActionCyCommandReducer(.queueJS(.cyAddClass(id: node.id, class: $0) ) ))
+                            })
+                            
+                        })
+                    )
                     ,
                     .concatenate(
                         deletedNodes.map({

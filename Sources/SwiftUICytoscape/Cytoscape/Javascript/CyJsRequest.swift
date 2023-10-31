@@ -28,14 +28,12 @@ public enum CyJsRequest : Equatable {
         case .cyAddClass(let id,let className):
             return """
 var j = cy.$('#\(id)');
-j.addClass( '#\(className)' );
-cy.layout().run();
+j.addClass( '\(className)' );
 """
         case .cyRemoveClass(let id,let className):
             return """
 var j = cy.$('#\(id)');
-j.removeClass( '#\(className)' );
-cy.layout().run();
+j.removeClass( '\(className)' );
 """
         case .cyAdd(let value):
         
@@ -45,7 +43,6 @@ cy.layout().run();
             return """
 var j = cy.$('#\(id)');
 cy.remove( j );
-cy.layout().run();
 """
         case .cyStyle(let value):
             return """

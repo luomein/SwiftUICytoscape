@@ -12,6 +12,10 @@ public enum CyJsResponse : String, CaseIterable{
         case click
         case tap
         
+        public var isClickOrTap : Bool{
+            return self == .click || self == .tap
+        }
+        
         public init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
             let status = try! container.decode(String.self)

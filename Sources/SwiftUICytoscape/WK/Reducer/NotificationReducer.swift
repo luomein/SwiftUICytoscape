@@ -28,26 +28,43 @@ public struct NotificationReducer<T:Equatable> : Reducer{
     }
     public struct State: Equatable{
         var receiveMessage : T?
+        var isListening = false
         public init() {}
     }
     public enum Action : Equatable{
         case postNotification(String)
         case listening
         case receive(T)
+        case stopListening
+    }
+    enum TaskID{
+        case defaultValue
     }
     public func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action{
+        case .stopListening:
+            state.isListening = false
+            print("stop listening")
+            return .cancel(id: TaskID.defaultValue)
+            
         case .postNotification(let value):
             NotificationCenter.default.post(name: postNotificationName
                                             , object: value, userInfo: ["id": userInfoID])
         case .listening:
+            guard !state.isListening else{
+                break
+            }
+            print("state.isListening" , state.isListening )
+            state.isListening = true
           return .run { send in
+              print("listening")
             for await notification in self.notificationAsyncStream() {
                 if let id = notification.userInfo?["id"] as? String, id == userInfoID{
                     await send(.receive(notification.object as! T))
                 }
             }
           }
+          .cancellable(id: TaskID.defaultValue , cancelInFlight: true)
 
         case .receive(let message):
             state.receiveMessage = message

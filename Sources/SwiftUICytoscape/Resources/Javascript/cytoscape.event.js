@@ -25,33 +25,39 @@ function configCytoscape(data, style){
             addCytoscapeEventListener(cy);
     return 0;
 }
+function isMobile() {
+    return navigator.userAgent.match(/(iPod|iPhone|iPad)/)
+}
 function addCytoscapeEventListener(cy){
-            cy.on("click", "node", function(event) {
-                    //var nodeId = event.target.id();
-                    console.log(event);
-                console.log(event.target.isEdge());
-                console.log(event.target.isNode());
-                console.log(event.target.className());
-                    // Send the event to Swift
-                    window.webkit.messageHandlers.CytoscapeEvent.postMessage({
-                        eventType: event.type,
-                        targetId: event.target.id(),
-                        isNode: event.target.isNode(),
-                        isEdge: event.target.isEdge()
-                    });
-                });
-    cy.on("tap", "node", function(event) {
+    var clickOrTap = isMobile() ? "tap" : "click" ;
+    
+    cy.on(clickOrTap, "node", function(event) {
             //var nodeId = event.target.id();
-            console.log(event);
-        console.log(event.target.isEdge());
-        console.log(event.target.isNode());
-        console.log(event.target.className());
+            //console.log(event);
+            //console.log(event.target.isEdge());
+            //console.log(event.target.isNode());
+            //console.log(event.target.className());
             // Send the event to Swift
             window.webkit.messageHandlers.CytoscapeEvent.postMessage({
-                eventType: event.type,
-                targetId: event.target.id(),
-                isNode: event.target.isNode(),
-                isEdge: event.target.isEdge()
+            eventType: event.type,
+            targetId: event.target.id(),
+            isNode: event.target.isNode(),
+            isEdge: event.target.isEdge()
             });
         });
+    cy.on(clickOrTap, "edge", function(event) {
+            //var nodeId = event.target.id();
+            //console.log(event);
+            //console.log(event.target.isEdge());
+            //console.log(event.target.isNode());
+            //console.log(event.target.className());
+            // Send the event to Swift
+            window.webkit.messageHandlers.CytoscapeEvent.postMessage({
+            eventType: event.type,
+            targetId: event.target.id(),
+            isNode: event.target.isNode(),
+            isEdge: event.target.isEdge()
+            });
+        });
+    
 }

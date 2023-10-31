@@ -28,13 +28,14 @@ public struct CyStyle : Codable, Equatable, Identifiable{
             return self.rawValue
         }
     }
-    public static var edgeStyle : Self = .init(selector: "edge", style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle), name: SystemID.edge.name , id:SystemID.edge.rawValue)
+    public static var edgeStyle : Self = .init(selector: "edge", style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle),  id:SystemID.edge.rawValue)
     public static var nodeStyle : Self = .init(selector: "node", style: .init(content: "data(label)",backgroundColor: "rgb(255,0,0)")
-                                               , name: SystemID.node.name , id:SystemID.node.rawValue)
+                                               , id:SystemID.node.rawValue)
     public static var defaultStyle : [Self] = [nodeStyle,
                                                edgeStyle
-                                               ,.init(selector: ".unionGraphData", style: .init(backgroundColor: "red"))
-                                               ,.init(selector: ".intersectGraphData", style: .init(backgroundColor: "green"))
+                                               //,.init(selector: ".unionGraphData", style: .init(backgroundColor: "red"))
+                                               //,.init(selector: ".intersectGraphData", style: .init(backgroundColor: "green"))
+                                                 
     ]
     public static var testStyle : [Self] = [.init(selector: "node", style: .init(content: "data(id)" , shape: .roundTriangle)) ,
                                            .init(selector: "edge", style: .init(curveStyle: "bezier"))
@@ -42,7 +43,7 @@ public struct CyStyle : Codable, Equatable, Identifiable{
     
     public var selector : String
     public var style : CyStyleData
-    public var name : String = "\(Int.random(in: 0...100))"
+    public var name : String {return selector}
     public var id : String = UUID().uuidString
     
     public struct CyStyleData : Codable, Equatable{
