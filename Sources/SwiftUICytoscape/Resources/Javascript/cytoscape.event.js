@@ -12,7 +12,7 @@ function clearCanvas(){
     cyCanvas.id = "cy";
     document.getElementById("cyContainer").append(cyCanvas);
 }
-function configCytoscape(data, style){
+function configCytoscape(data, style, isMobile){
     
     
             cy = cytoscape({
@@ -23,14 +23,14 @@ function configCytoscape(data, style){
                     name: 'grid'
                 }
             });
-            addCytoscapeEventListener(cy);
+            addCytoscapeEventListener(cy, isMobile);
     return 0;
 }
-function isMobile() {
-    return navigator.userAgent.match(/(iPod|iPhone|iPad)/)
-}
-function addCytoscapeEventListener(cy){
-    var clickOrTap = isMobile() ? "tap" : "click" ;
+//function isMobile() {
+//    return navigator.userAgent.match(/(iPod|iPhone|iPad)/)
+//}
+function addCytoscapeEventListener(cy, isMobile){
+    var clickOrTap = isMobile ? "tap" : "click" ;
     
     cy.on(clickOrTap, "node", function(event) {
             //var nodeId = event.target.id();

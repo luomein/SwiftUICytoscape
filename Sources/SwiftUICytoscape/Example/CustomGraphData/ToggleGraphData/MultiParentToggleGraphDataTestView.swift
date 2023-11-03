@@ -579,6 +579,13 @@ struct MultiParentToggleGraphDataTestView_Previews: PreviewProvider {
     static let store : StoreOf<MultiParentToggleGraphDataReducer> = MultiParentToggleGraphDataReducer.store
     static var previews: some View {
         Form{
+#if os(iOS) || os(watchOS) || os(tvOS)
+    Text("os(iOS) || os(watchOS) || os(tvOS)")
+#elseif os(macOS)
+    Text("os(macOS)")
+#else
+    Text("else")
+#endif
             MultiParentToggleGraphDataTestView(showColorIndicateViewRefresh: true)
             CyWKCoordinatorSwiftUIView()
                 .frame(height: 300)

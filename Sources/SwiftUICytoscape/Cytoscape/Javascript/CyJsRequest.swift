@@ -24,7 +24,11 @@ public enum CyJsRequest : Equatable {
             let style = CyStyle.defaultStyle
             return "clearCanvas();configCytoscape(\(value.jsonString), \(style.jsonString) );"
         case .initCytoscape(let value, let style):
-            return "configCytoscape(\(value.jsonString), \(style.jsonString) );"
+#if os(iOS) || os(watchOS) || os(tvOS)
+            return "configCytoscape(\(value.jsonString), \(style.jsonString) , true );"
+#else
+            return "configCytoscape(\(value.jsonString), \(style.jsonString) , false );"
+#endif
         case .cyAddClass(let id,let className):
             return """
 var j = cy.$('#\(id)');
