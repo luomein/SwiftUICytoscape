@@ -309,6 +309,7 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
                                                                                   , cyGraph: .emptyGraph)
         public var nodes : IdentifiedArrayOf<ToggleGraphDataNode>
         public var relations : IdentifiedArrayOf<ToggleGraphDataNodeParentRelation>
+        public var keyinString : String = ""
         public init(nodes: IdentifiedArrayOf<ToggleGraphDataNode> = []
         ,relations : IdentifiedArrayOf<ToggleGraphDataNodeParentRelation> = []) {
             self.nodes = nodes
@@ -325,6 +326,8 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
         case deleteNode(node: ToggleGraphDataNode)
         case resetResponseData
         case updateCyGraph
+        case keyinNodeID(context: ToggleGraphDataNode, keyin: String)
+        case makeTemperaryConnection(child: ToggleGraphDataNode, parent: ToggleGraphDataNode)
     }
     public var body: some ReducerProtocol<State, Action> {
         Scope(state: \.joinCyGraphDataReducerState, action: /Action.joinActionCyGraphDataReducer, child: {CyGraphDataReducer(initGraph: .emptyGraph
@@ -332,6 +335,17 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
         
         Reduce{state, action in
             switch action{
+            case .keyinNodeID(let context,let value):
+                state.keyinString = value
+                if let node = state.nodes[id:value]{
+                    return .send(.makeTemperaryConnection(child: context, parent: node))
+                }
+            case .makeTemperaryConnection(let child, let parent):
+                let edge = CyEdge(id: "temp" + child.id + parent.id
+                                  , label: "temp" + child.id + parent.id
+                                  , classes : ["temp"]
+                                  , source: child.id, target: parent.id)
+                return .send(.joinActionCyGraphDataReducer(.addEdge(edge)))
             case .resetResponseData:
                 state.joinCyGraphDataReducerState.joinCyCommandReducerState.cytoscapeJavascriptResponseData = nil
             case .deleteRelation(let relation):
@@ -437,7 +451,7 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
         .forEach(\.nodes, action: /Action.joinActionToggleGraphDataNodeReducer, element: {ToggleGraphDataNodeReducer()})
     }
 }
-struct MultiParentToggleGraphDataNodeTestView2: View {
+struct MultiParentToggleGraphDataNodeTestView: View {
     //let store : StoreOf<CyCommandReducer>
     let responseData : CyJsResponse.CyJsResponseData?
     let rootStore : StoreOf<MultiParentToggleGraphDataReducer> = MultiParentToggleGraphDataReducer.store
@@ -450,19 +464,43 @@ struct MultiParentToggleGraphDataNodeTestView2: View {
                     Text(responseData.targetId)
                     if responseData.isNode{
                         let node = viewStore.nodes[id:responseData.targetId]!
-                        Button {
-                            viewStore.send(.newNode(parent: node))
-                        } label: {
-                            Text("add child")
-                        }.buttonStyle(.plain)
-                        Button {
-                            viewStore.send(.deleteNode(node: node))
-                        } label: {
-                            Text("delete")
-                        }.buttonStyle(.plain)
-                            .disabled(
-                                !viewStore.state.getDownStreamRelation(of: node).isEmpty
-                            )
+                        VStack{
+                            HStack{
+                                Button {
+                                    viewStore.send(.newNode(parent: node))
+                                } label: {
+                                    Text("add child")
+                                }.buttonStyle(.plain)
+                                Button {
+                                    viewStore.send(.deleteNode(node: node))
+                                } label: {
+                                    Text("delete")
+                                }.buttonStyle(.plain)
+                                    .disabled(
+                                        !viewStore.state.getDownStreamRelation(of: node).isEmpty
+                                    )
+                            }
+                            HStack{
+                                TextField("add parent by ID: ", text: viewStore.binding(get: \.keyinString
+                                                                                        , send: {MultiParentToggleGraphDataReducer.Action.keyinNodeID(context: node, keyin: $0)})
+                                
+)
+                                
+                      Button {
+                          let parentNode = viewStore.nodes[id: viewStore.keyinString]!
+                          viewStore.send(.addParent(child: node, parent: parentNode))
+                          viewStore.send(.keyinNodeID(context: node, keyin: ""))
+                      } label: {
+                          Text("Done")
+                      }
+                      .disabled(
+                          !buttonDoneEnable(keyinString: viewStore.keyinString
+                                            , fromNode: node
+                                            , state: viewStore.state)
+                      )
+//
+                            }
+                        }
                     }
                     if responseData.isEdge{
                         let relation = viewStore.relations[id:responseData.targetId]!
@@ -481,32 +519,19 @@ struct MultiParentToggleGraphDataNodeTestView2: View {
                     .opacity(0.5)
             }
         }
+        
     }
-}
-struct MultiParentToggleGraphDataNodeTestView: View {
-    let store : StoreOf<MultiParentToggleGraphDataReducer.ToggleGraphDataNodeReducer>
-    
-    let childNodes : [MultiParentToggleGraphDataReducer.ToggleGraphDataNode]
-    var head : some View{
-        WithViewStore(self.store, observe: {$0}) { viewStore in
-            HStack{
-                Text(viewStore.id)
-                Button {
-                    viewStore.send(.addChild(from: viewStore.state))
-                } label: {
-                    
-                    Text("add child")
-                }.buttonStyle(.plain)
-            }
+    func buttonDoneEnable(keyinString: String, fromNode: MultiParentToggleGraphDataReducer.ToggleGraphDataNode
+                          , state:  MultiParentToggleGraphDataReducer.State )->Bool{
+        if let parentNode = state.nodes[id: keyinString]{
+            return state.acceptNewRelation(childNode: fromNode, parentNode: parentNode)
+        }
+        else{
+            return false
         }
     }
-    var body: some View {
-        WithViewStore(self.store, observe: {$0}) { viewStore in
-            head
+}
 
-        }
-    }
-}
 public struct MultiParentToggleGraphDataTestView: View {
     let store : StoreOf<MultiParentToggleGraphDataReducer> = MultiParentToggleGraphDataReducer.store
     let showColorIndicateViewRefresh : Bool
@@ -538,7 +563,7 @@ public struct MultiParentToggleGraphDataTestView: View {
 //                            MultiParentToggleGraphDataNodeTestView(store: subStore
 //                                                                   , childNodes: viewStore.state.getChildNodes(of: node) )
 //                        }
-                        MultiParentToggleGraphDataNodeTestView2(responseData: viewStore.joinCyGraphDataReducerState.joinCyCommandReducerState.cytoscapeJavascriptResponseData)
+                        MultiParentToggleGraphDataNodeTestView(responseData: viewStore.joinCyGraphDataReducerState.joinCyCommandReducerState.cytoscapeJavascriptResponseData)
 
                     }
                     

@@ -29,6 +29,7 @@ public struct CyGraphDataReducer : ReducerProtocol{
         case joinActionCyCommandReducer(CyCommandReducer.Action)
         case joinActionCyStyleReducer(CyStyleReducer.State.ID,CyStyleReducer.Action)
         case addNode(CyNode)
+        case addEdge(CyEdge)
         case update(CyGraph)
         //case addEdge(CyEdge)
     }
@@ -37,6 +38,9 @@ public struct CyGraphDataReducer : ReducerProtocol{
         
         Reduce{state, action in
             switch action{
+            case .addEdge(let data):
+                state.cyGraph.edges.append(data)
+                return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [], edges: [data]) ) ) ))
             case .addNode(let data):
                 state.cyGraph.nodes.append(data)
                 return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [data], edges: []) ) ) ))
