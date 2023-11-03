@@ -3,6 +3,7 @@ var cy;
 document.addEventListener('DOMContentLoaded', function () {
     //console.log('DOMContentLoaded');
                 //document.getElementById("test").innerHTML = "DOMContentLoaded";
+    document.getElementById("userAgent").innerHTML = navigator.userAgent
           webkit.messageHandlers.DOMContentLoaded.postMessage('DOMContentLoaded');
 });
 function clearCanvas(){
