@@ -29,6 +29,7 @@ extension SingleParentToggleGraphDataReducer.State{
             .map({currentNode in
                 return CyEdge.init(id: "e_" + currentNode.id, label: currentNode.id, source: currentNode.id, target: currentNode.parentNodeID!)
             })
+                     ,layout: self.joinCyGraphDataReducerState.cyGraph.layout
         )
     }
 }
@@ -74,7 +75,8 @@ extension SingleParentToggleGraphDataReducer.State{
         return cascadeNodeStatus(parentNodeList: childrenNodes.elements, initialState: &initialState)
     }
 }
-public struct SingleParentToggleGraphDataReducer : ReducerProtocol{
+public struct SingleParentToggleGraphDataReducer : Reducer{
+    @Dependency(\.context) var context
     public struct ToggleGraphDataNode: Identifiable, Equatable{
         public var node : CyNode
         public var isExpanded : Bool {
@@ -147,14 +149,14 @@ public struct SingleParentToggleGraphDataReducer : ReducerProtocol{
             }
         }
     }
-    public struct ToggleGraphDataNodeReducer : ReducerProtocol{
+    public struct ToggleGraphDataNodeReducer : Reducer{
         public typealias State = ToggleGraphDataNode
         public enum Action : Equatable{
             case toggleStatus
             case toggleExpanded
             case addChild(from: ToggleGraphDataNode)
         }
-        public var body: some ReducerProtocol<State, Action> {
+        public var body: some Reducer<State, Action> {
             Reduce{state, action in
                 switch action{
                 case .toggleExpanded:
@@ -184,7 +186,7 @@ public struct SingleParentToggleGraphDataReducer : ReducerProtocol{
         case joinActionCyGraphDataReducer(CyGraphDataReducer.Action)
         case add(parent : ToggleGraphDataNode?)
     }
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyGraphDataReducerState, action: /Action.joinActionCyGraphDataReducer, child: {CyGraphDataReducer(initGraph: .emptyGraph
                                                                                                                              , initStyle: State.defaultStyle)})
         

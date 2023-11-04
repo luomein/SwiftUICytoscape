@@ -9,8 +9,8 @@ import SwiftUI
 import ComposableArchitecture
 import WebKit
 
-public struct CyTestViewReducer : ReducerProtocol{
-    public struct State: Equatable{
+public struct CyTestViewReducer : Reducer{
+    public struct State: Equatable, Hashable{
         var joinCyCommandReducerState : CyCommandReducer.State = .init()
         var joinCyStyleReducerState : CyStyleReducer.State = .nodeStyle
         public init(){}
@@ -21,7 +21,7 @@ public struct CyTestViewReducer : ReducerProtocol{
         case queueJS(CyJsRequest)
     }
     public init(){}
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyCommandReducerState, action: /Action.joinCyCommandReducerAction, child: {CyCommandReducer()})
         Scope(state: \.joinCyStyleReducerState, action: /Action.joinCyStyleReducerAction, child: {CyStyleReducer()})
         Reduce{state, action in
@@ -39,15 +39,49 @@ public struct CyTestViewReducer : ReducerProtocol{
 }
 public struct CyTestView: View {
     let store : StoreOf<CyTestViewReducer>
+    @State var layout : CyLayout = .grid
     public init(store: StoreOf<CyTestViewReducer>) {
         self.store = store
     }
 
-    
+    var test : some View{
+        WithViewStore(self.store, observe: {$0}) { viewStore in
+            Picker(selection: $layout )
+//                    viewStore.binding( send: {
+//                if let layout = {
+//                    CyTestViewReducer.Action.joinCyCommandReducerAction(.queueJS(.cyLayout( layout)))
+//                }
+//            }))
+            {
+                ForEach(CyLayout.allCases) { value in
+                    Text(value.rawValue)
+                }
+            } label: {
+                Text("layout")
+            }
+        }
+    }
     public var body: some View {
         WithViewStore(self.store, observe: {$0}) { viewStore in
             Form{
+                Picker(selection: .init(get: {layout}, set: {
+                    layout = $0
+                    viewStore.send(.queueJS(.cyLayout($0)))
+                })
+                )
+                {
+                    ForEach(CyLayout.allCases) { value in
+                        Text(value.rawValue)
+                            .tag(value)
+                    }
+                } label: {
+                    Text("layout")
+                }
+                
+                
                 CyStyleReducerView(store: store.scope(state: \.joinCyStyleReducerState, action: {CyTestViewReducer.Action.joinCyStyleReducerAction($0)}))
+
+                
                 Button {
                     //viewStore.send(.clearCanvas)
                     //return .send(.queueJS(.clearCanvas))
@@ -58,7 +92,7 @@ public struct CyTestView: View {
                 Button {
                     //viewStore.send(.clearCanvas)
                     //return .send(.queueJS(.clearCanvas))
-                    viewStore.send(.queueJS(.cyAdd(.init(nodes: [.init( id: "\(Int.random(in: 0...1000))", label: "\(Int.random(in: 0...1000))")  ], edges: []))))
+                    viewStore.send(.queueJS(.cyAdd(.init(nodes: [.init( id: "\(Int.random(in: 0...1000))", label: "\(Int.random(in: 0...1000))")  ], edges: [], layout: layout))))
                 } label: {
                     Text("add")
                 }
@@ -69,6 +103,7 @@ public struct CyTestView: View {
                 }
                 
             }
+            
             .background {
                 WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyCommandReducerState.joinNotificationReducerState, action: {
                     CyTestViewReducer.Action.joinCyCommandReducerAction(.joinActionNotificationReducer($0))

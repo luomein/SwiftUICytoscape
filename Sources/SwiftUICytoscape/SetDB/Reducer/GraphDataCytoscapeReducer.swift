@@ -9,7 +9,7 @@ import Foundation
 import ComposableArchitecture
 
 
-public struct GraphDataCytoscapeReducer : ReducerProtocol{
+public struct GraphDataCytoscapeReducer : Reducer{
 
     public init() {}
     public struct State: Equatable{
@@ -39,7 +39,7 @@ public struct GraphDataCytoscapeReducer : ReducerProtocol{
         case addEdge(CyEdge)
         case updateSelectMode(State.selectMode)
     }
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.cytoscapeWKReducerState, action: /Action.joinActionCytoscapeWKReducer, child: {CyCommandReducer()})
         Reduce{state, action in
             switch action{

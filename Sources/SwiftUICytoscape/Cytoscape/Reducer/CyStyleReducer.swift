@@ -9,7 +9,7 @@ import Foundation
 import ComposableArchitecture
 import SwiftUI
 
-public struct CyStyleReducer : ReducerProtocol{
+public struct CyStyleReducer : Reducer{
     
     public init() {}
     public typealias State = CyStyle
@@ -18,7 +18,7 @@ public struct CyStyleReducer : ReducerProtocol{
         case setBackgroundColor(Color)
         case setAttribute(attribute: WritableKeyPath<CyStyle.CyStyleData,String?>, value: String)
     }
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Reduce{state, action in
             switch action{
             case .setBackgroundColor(let color):

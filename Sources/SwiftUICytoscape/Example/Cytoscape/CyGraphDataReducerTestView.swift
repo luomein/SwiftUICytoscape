@@ -21,7 +21,7 @@ public struct CyGraphDataReducerTestView: View {
                     //return .send(.queueJS(.clearCanvas))
                     let id = "\(Int.random(in: 0...1000))"
                     viewStore.send(.addNode(.init(id: id, label: id)))
-                    //viewStore.send(.queueJS(.cyAdd(.init(nodes: [.init( id: "\(Int.random(in: 0...1000))", label: "\(Int.random(in: 0...1000))")  ], edges: []))))
+                   
                 } label: {
                     Text("add")
                 }

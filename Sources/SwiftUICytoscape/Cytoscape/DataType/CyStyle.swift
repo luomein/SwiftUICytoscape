@@ -19,7 +19,7 @@ public extension Array where Element: Codable {
 ///'background-color': 'blue'
 ///}).update();
 ///
-public struct CyStyle : Codable, Equatable, Identifiable{
+public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
     public enum SystemID: String{
         case node
         case edge
@@ -46,7 +46,7 @@ public struct CyStyle : Codable, Equatable, Identifiable{
     public var name : String {return selector}
     public var id : String = UUID().uuidString
     
-    public struct CyStyleData : Codable, Equatable{
+    public struct CyStyleData : Codable, Equatable, Hashable{
         public var content : String?
         public var curveStyle : String?
         public var backgroundColor : String?

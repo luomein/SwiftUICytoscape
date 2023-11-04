@@ -15,19 +15,21 @@ public enum CyJsRequest : Equatable {
     case cyStyle([CyStyle])
     case cyAddClass(id: String, class: String)
     case cyRemoveClass(id: String, class: String)
-    
+    case cyLayout(CyLayout)
     
     var jsString : String{
         switch self{
+        case .cyLayout(let layout):
+            return "cy.layout({name:'\(layout.rawValue)'}).run();"
         case .resetCanvas:
             let value = CyGraph.emptyGraph
             let style = CyStyle.defaultStyle
             return "clearCanvas();configCytoscape(\(value.jsonString), \(style.jsonString) );"
         case .initCytoscape(let value, let style):
 #if os(iOS) || os(watchOS) || os(tvOS)
-            return "configCytoscape(\(value.jsonString), \(style.jsonString) , true );"
+            return "configCytoscape(\(value.jsonString), \(style.jsonString) , true  , '\(value.layout.rawValue)' );"
 #else
-            return "configCytoscape(\(value.jsonString), \(style.jsonString) , false );"
+            return "configCytoscape(\(value.jsonString), \(style.jsonString) , false , '\(value.layout.rawValue)'  );"
 #endif
         case .cyAddClass(let id,let className):
             return """
@@ -40,9 +42,8 @@ var j = cy.$('#\(id)');
 j.removeClass( '\(className)' );
 """
         case .cyAdd(let value):
-        
-            return "cy.add(\(value.jsonString));cy.layout({name:'grid'}).run();"
-        
+            if value.edges.isEmpty && value.nodes.isEmpty{return ""}
+            else{return "cy.add(\(value.jsonString));cy.layout({name:'\(value.layout.rawValue)'}).run();"}
         case .cyRemove(let id):
             return """
 var j = cy.$('#\(id)');

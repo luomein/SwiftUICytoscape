@@ -12,7 +12,7 @@ function clearCanvas(){
     cyCanvas.id = "cy";
     document.getElementById("cyContainer").append(cyCanvas);
 }
-function configCytoscape(data, style, isMobile){
+function configCytoscape(data, style, isMobile, layout){
     
     
             cy = cytoscape({
@@ -20,7 +20,7 @@ function configCytoscape(data, style, isMobile){
                 style: style,
                 elements: data,
                 layout: {
-                    name: 'grid'
+                    name: layout
                 }
             });
             addCytoscapeEventListener(cy, isMobile);

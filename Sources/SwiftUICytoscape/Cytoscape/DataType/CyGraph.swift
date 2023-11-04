@@ -45,13 +45,38 @@ public struct CyEdge: Codable, Identifiable, Equatable, Hashable {
         let label: String
     }
 }
-public struct CyGraph: Codable, Equatable, Hashable {
+
+///
+///https://blog.js.cytoscape.org/2020/05/11/layouts/
+///
+public enum CyLayout: String, Codable, Equatable, Hashable, CaseIterable, Identifiable{
+    case grid
+    case fcose
+    case circle
+    case concentric
+    case avsdf //Whereas the circle layout is useful when you want to order the nodes yourself, the avsdf layout is useful when you want to automatically order the nodes to try to avoid edge overlap.
+    case dagre
+    case breadthfirst
+    
+    public var id: String{
+        return rawValue
+    }
+}
+public struct CyGraph: Encodable, Equatable, Hashable {
     public var nodes: [CyNode]
     public var edges: [CyEdge]
+    
+    public var layout : CyLayout
+    
+//    enum CodingKeys: String, CodingKey {
+//        case nodes
+//        case edges
+//    }
     public static var emptyGraph : Self = .init(nodes: [], edges: [])
-    public init(nodes: [CyNode], edges: [CyEdge]) {
+    public init(nodes: [CyNode], edges: [CyEdge], layout: CyLayout = .fcose) {
         self.nodes = nodes
         self.edges = edges
+        self.layout = layout
     }
     var jsonString : String{
         let jsonData = try! JSONEncoder().encode(self)

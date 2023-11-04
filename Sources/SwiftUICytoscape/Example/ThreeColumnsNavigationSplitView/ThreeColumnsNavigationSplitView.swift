@@ -12,7 +12,7 @@ public struct ThreeColumnsNavigationSplitView: View {
     @State var columnVisibility: NavigationSplitViewVisibility = .all
     @State var selectedIds : Set<String> = []
     //@State var path: [Route] = []
-    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    //@Environment(\.horizontalSizeClass) var horizontalSizeClass
     var store : StoreOf<GraphDataCytoscapeReducer> = .init(initialState: .init()
                                                           , reducer:{GraphDataCytoscapeReducer()} )
     public init(){
@@ -40,7 +40,7 @@ public struct ThreeColumnsNavigationSplitView: View {
                 columnVisibility: $columnVisibility
             ) {
                 List(selection:$selectedIds){
-                    if horizontalSizeClass == .compact{
+                    //if horizontalSizeClass == .compact{
                         Button {
                             selectedIds = Set([SubView.graph.rawValue])
                         } label: {
@@ -54,7 +54,7 @@ public struct ThreeColumnsNavigationSplitView: View {
 //                                columnVisibility = .doubleColumn //.detailOnly
 //                            }
 //                        }
-                    }
+                    //}
                     DisclosureGroup {
 //                        Button {
 //                            viewStore.send(.addNode(.init(data: .init(id: UUID().uuidString, label: "\(Int.random(in: 0...1000))"))))

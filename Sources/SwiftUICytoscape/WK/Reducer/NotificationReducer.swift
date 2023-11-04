@@ -10,7 +10,7 @@ import Foundation
 import ComposableArchitecture
 import WebKit
 
-public struct NotificationReducer<T:Equatable> : Reducer{
+public struct NotificationReducer<T:Equatable> : Reducer where T:Hashable{
     var notificationAsyncStream: @Sendable ()  -> AsyncStream<Notification>
     var listenNotificationName : Notification.Name
     var postNotificationName : Notification.Name
@@ -26,7 +26,7 @@ public struct NotificationReducer<T:Equatable> : Reducer{
             )
         }
     }
-    public struct State: Equatable{
+    public struct State: Equatable, Hashable{
         var receiveMessage : T?
         var isListening = false
         public init() {}
@@ -44,7 +44,6 @@ public struct NotificationReducer<T:Equatable> : Reducer{
         switch action{
         case .stopListening:
             state.isListening = false
-            print("stop listening")
             return .cancel(id: TaskID.defaultValue)
             
         case .postNotification(let value):
@@ -54,17 +53,15 @@ public struct NotificationReducer<T:Equatable> : Reducer{
             guard !state.isListening else{
                 break
             }
-            print("state.isListening" , state.isListening )
             state.isListening = true
-          return .run { send in
-              print("listening")
-            for await notification in self.notificationAsyncStream() {
-                if let id = notification.userInfo?["id"] as? String, id == userInfoID{
-                    await send(.receive(notification.object as! T))
-                }
+            return .run { send in
+              for await notification in self.notificationAsyncStream() {
+                  if let id = notification.userInfo?["id"] as? String, id == userInfoID{
+                      await send(.receive(notification.object as! T))
+                  }
+              }
             }
-          }
-          .cancellable(id: TaskID.defaultValue , cancelInFlight: true)
+            .cancellable(id: TaskID.defaultValue , cancelInFlight: true)
 
         case .receive(let message):
             state.receiveMessage = message

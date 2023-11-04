@@ -93,6 +93,7 @@ extension MultiParentToggleGraphDataReducer.State{
         }
         return .init(nodes: filteredNodes
                      , edges: filteredEdges
+                     , layout: self.joinCyGraphDataReducerState.cyGraph.layout
         )
     }
 }
@@ -171,7 +172,9 @@ extension MultiParentToggleGraphDataReducer.State{
 
 
 }
-public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
+public struct MultiParentToggleGraphDataReducer : Reducer{
+    @Dependency(\.context) var context
+    @Dependency(\.mainQueue) var mainQueue
     public struct ToggleGraphDataNodeParentRelation: Identifiable, Equatable, Hashable{
         public var parentNodeID : ToggleGraphDataNode.ID
         public var childNodeID : ToggleGraphDataNode.ID
@@ -283,25 +286,6 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
 
         }
     }
-    public struct ToggleGraphDataNodeReducer : ReducerProtocol{
-        public typealias State = ToggleGraphDataNode
-        public enum Action : Equatable{
-            case toggleStatus
-            
-            case addChild(from: ToggleGraphDataNode)
-        }
-        public var body: some ReducerProtocol<State, Action> {
-            Reduce{state, action in
-                switch action{
-                case .toggleStatus:
-                    break
-                case .addChild:
-                    break
-                }
-                return .none
-            }
-        }
-    }
     public struct State: Equatable{
         static var defaultStyle = CyStyle.defaultStyle + ToggleGraphDataNode.NodeStatus.allCases.map({$0.cyStyle})
         public var joinCyGraphDataReducerState : CyGraphDataReducer.State = .init(joinCyCommandReducerState: .init()
@@ -318,7 +302,7 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
         
     }
     public enum Action : Equatable{
-        case joinActionToggleGraphDataNodeReducer(ToggleGraphDataNodeReducer.State.ID, ToggleGraphDataNodeReducer.Action)
+        case toggleNode(nodeID: String)
         case joinActionCyGraphDataReducer(CyGraphDataReducer.Action)
         case newNode(parent : ToggleGraphDataNode?)
         case addParent(child: ToggleGraphDataNode, parent: ToggleGraphDataNode)
@@ -329,7 +313,10 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
         case keyinNodeID(context: ToggleGraphDataNode, keyin: String)
         case makeTemperaryConnection(child: ToggleGraphDataNode, parent: ToggleGraphDataNode)
     }
-    public var body: some ReducerProtocol<State, Action> {
+    private enum CancelID {
+      case debounceKeyinNodeID
+    }
+    public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyGraphDataReducerState, action: /Action.joinActionCyGraphDataReducer, child: {CyGraphDataReducer(initGraph: .emptyGraph
                                                                                                                              , initStyle: State.defaultStyle)})
         
@@ -338,7 +325,10 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
             case .keyinNodeID(let context,let value):
                 state.keyinString = value
                 if let node = state.nodes[id:value]{
+                    let  debounceDuration : DispatchQueue.SchedulerTimeType.Stride = 1
                     return .send(.makeTemperaryConnection(child: context, parent: node))
+                       // .debounce(id: CancelID.debounceKeyinNodeID, for: debounceDuration, scheduler: mainQueue)
+                    //.debounce(for: CancelID.debounceKeyinNodeID, scheduler: debounceDuration, options: mainQueue)
                 }
             case .makeTemperaryConnection(let child, let parent):
                 let edge = CyEdge(id: "temp" + child.id + parent.id
@@ -366,14 +356,15 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
                     , .send(.updateCyGraph)
                     )
             case .updateCyGraph:
-                return     .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
-            case .addParent(var child, let parent):
-                //child.parentNodeIDs.insert(parent.id)
+                switch context{
+                case .live, .preview:
+                    return     .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
+                case .test:
+                    break
+                }
                 
-                //if state.acceptNewOrUpdateNode(newNode: child){
+            case .addParent(var child, let parent):
                 if state.acceptNewRelation(childNode: child, parentNode: parent){
-                    //child.nodeStatus = .fullyExpanded
-                    //state.nodes[id:child.id]! = child
                     state.relations.append(.init(parentNodeID: parent.id, childNodeID: child.id, isVisible: true))
                     MultiParentToggleGraphDataReducer.State.upTraceRelationVisible(node: child, initialState: &state)
                     
@@ -405,32 +396,29 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
                 else{
                     return .send(.updateCyGraph)
                 }
-            case .joinActionToggleGraphDataNodeReducer(let id, let subAction):
-                switch subAction{
-                case .toggleStatus:
-                    let node = state.nodes[id:id]!
-                    let upStreamRelations = state.getUpStreamRelation(of: node)
-                    let downStreamRelations = state.getDownStreamRelation(of: node)
-                    let toggleUpStreamVisible = MultiParentToggleGraphDataReducer.ToggleGraphDataNode.RelationSetStatus.toggleUpStreamVisible(relationSet: Set(upStreamRelations))
-                    let toggleDownStreamVisible = MultiParentToggleGraphDataReducer.ToggleGraphDataNode.RelationSetStatus.toggleDownStreamVisible(relationSet: Set(downStreamRelations))
-                    upStreamRelations.forEach {
-                        state.relations[id:$0.id]!.isVisible = toggleUpStreamVisible
-                    }
-                    downStreamRelations.forEach {
-                        state.relations[id:$0.id]!.isVisible = toggleDownStreamVisible
-                    }
-                    let nodeStatusAfter = state.getNodeStatus(of: node)
-                    if nodeStatusAfter == .fullyExpanded{
-                        MultiParentToggleGraphDataReducer.State.upTraceRelationVisible(node: node, initialState: &state)
-                    }
-                    if nodeStatusAfter == .toggle{
-                        MultiParentToggleGraphDataReducer.State.downTraceRelationInVisible(node: node, initialState: &state)
-                    }
-                    return .send(.updateCyGraph)
+            case .toggleNode(let id):
                 
-                case .addChild(let node):
-                    return .send(.newNode(parent: node))
+                let node = state.nodes[id:id]!
+                let upStreamRelations = state.getUpStreamRelation(of: node)
+                let downStreamRelations = state.getDownStreamRelation(of: node)
+                let toggleUpStreamVisible = MultiParentToggleGraphDataReducer.ToggleGraphDataNode.RelationSetStatus.toggleUpStreamVisible(relationSet: Set(upStreamRelations))
+                let toggleDownStreamVisible = MultiParentToggleGraphDataReducer.ToggleGraphDataNode.RelationSetStatus.toggleDownStreamVisible(relationSet: Set(downStreamRelations))
+                upStreamRelations.forEach {
+                    state.relations[id:$0.id]!.isVisible = toggleUpStreamVisible
                 }
+                downStreamRelations.forEach {
+                    state.relations[id:$0.id]!.isVisible = toggleDownStreamVisible
+                }
+                let nodeStatusAfter = state.getNodeStatus(of: node)
+                if nodeStatusAfter == .fullyExpanded{
+                    MultiParentToggleGraphDataReducer.State.upTraceRelationVisible(node: node, initialState: &state)
+                }
+                if nodeStatusAfter == .toggle{
+                    MultiParentToggleGraphDataReducer.State.downTraceRelationInVisible(node: node, initialState: &state)
+                }
+                return .send(.updateCyGraph)
+                
+
             case .joinActionCyGraphDataReducer(let subAction):
                 switch subAction{
                 case .joinActionCyCommandReducer(let command):
@@ -438,7 +426,7 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
                     if case .cytoscapeEvent(let event) = command
                         , event.eventType.isClickOrTap
                         , event.isNode{
-                        return .send(.joinActionToggleGraphDataNodeReducer(event.targetId, .toggleStatus) )
+                        return .send(.toggleNode(nodeID: event.targetId) )
                     }
                     break
                 default:
@@ -448,11 +436,10 @@ public struct MultiParentToggleGraphDataReducer : ReducerProtocol{
             }
             return .none
         }
-        .forEach(\.nodes, action: /Action.joinActionToggleGraphDataNodeReducer, element: {ToggleGraphDataNodeReducer()})
+       
     }
 }
 struct MultiParentToggleGraphDataNodeTestView: View {
-    //let store : StoreOf<CyCommandReducer>
     let responseData : CyJsResponse.CyJsResponseData?
     let rootStore : StoreOf<MultiParentToggleGraphDataReducer> = MultiParentToggleGraphDataReducer.store
     
@@ -483,7 +470,6 @@ struct MultiParentToggleGraphDataNodeTestView: View {
                             HStack{
                                 TextField("add parent by ID: ", text: viewStore.binding(get: \.keyinString
                                                                                         , send: {MultiParentToggleGraphDataReducer.Action.keyinNodeID(context: node, keyin: $0)})
-                                
 )
                                 
                       Button {
@@ -504,7 +490,6 @@ struct MultiParentToggleGraphDataNodeTestView: View {
                     }
                     if responseData.isEdge{
                         let relation = viewStore.relations[id:responseData.targetId]!
-                        let childNode = viewStore.nodes[id:relation.childNodeID]!
                         Button {
                             viewStore.send(.deleteRelation(relation: relation))
                         } label: {
@@ -543,6 +528,9 @@ public struct MultiParentToggleGraphDataTestView: View {
         Section
             {
                     WithViewStore(self.store, observe: {$0}) { viewStore in
+                        CyLayoutPicker(store: store.scope(state: \.joinCyGraphDataReducerState, action: { childAction in
+                            MultiParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(childAction)
+                        }))
                         if showColorIndicateViewRefresh{
                             Text("showColorIndicateViewRefresh")
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -556,13 +544,7 @@ public struct MultiParentToggleGraphDataTestView: View {
                         } label: {
                             Text("add")
                         }
-                        
-//                        ForEach(viewStore.nodes) { node in
-//                            let subStore : StoreOf<MultiParentToggleGraphDataReducer.ToggleGraphDataNodeReducer> = store.scope(state: {$0.nodes[id:node.id]!}
-//                                                                                                                               , action: {.joinActionToggleGraphDataNodeReducer(node.id, $0)})
-//                            MultiParentToggleGraphDataNodeTestView(store: subStore
-//                                                                   , childNodes: viewStore.state.getChildNodes(of: node) )
-//                        }
+
                         MultiParentToggleGraphDataNodeTestView(responseData: viewStore.joinCyGraphDataReducerState.joinCyCommandReducerState.cytoscapeJavascriptResponseData)
 
                     }
@@ -579,13 +561,6 @@ struct MultiParentToggleGraphDataTestView_Previews: PreviewProvider {
     static let store : StoreOf<MultiParentToggleGraphDataReducer> = MultiParentToggleGraphDataReducer.store
     static var previews: some View {
         Form{
-#if os(iOS) || os(watchOS) || os(tvOS)
-    Text("os(iOS) || os(watchOS) || os(tvOS)")
-#elseif os(macOS)
-    Text("os(macOS)")
-#else
-    Text("else")
-#endif
             MultiParentToggleGraphDataTestView(showColorIndicateViewRefresh: true)
             CyWKCoordinatorSwiftUIView()
                 .frame(height: 300)

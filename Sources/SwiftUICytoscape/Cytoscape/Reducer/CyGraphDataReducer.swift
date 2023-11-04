@@ -8,7 +8,7 @@
 import Foundation
 import ComposableArchitecture
 
-public struct CyGraphDataReducer : ReducerProtocol{
+public struct CyGraphDataReducer : Reducer{
     let initGraph : CyGraph
     let initStyle : [CyStyle]
     public init(initGraph: CyGraph, initStyle: [CyStyle]) {
@@ -30,20 +30,26 @@ public struct CyGraphDataReducer : ReducerProtocol{
         case joinActionCyStyleReducer(CyStyleReducer.State.ID,CyStyleReducer.Action)
         case addNode(CyNode)
         case addEdge(CyEdge)
+        case setLayout(CyLayout)
         case update(CyGraph)
         //case addEdge(CyEdge)
     }
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyCommandReducerState, action: /Action.joinActionCyCommandReducer, child: {CyCommandReducer(initGraph: initGraph, initStyle: initStyle)})
         
         Reduce{state, action in
             switch action{
+            case .setLayout(let layout):
+                state.cyGraph.layout = layout
+                return .send(.joinActionCyCommandReducer(.queueJS(.cyLayout(layout) ) ))
             case .addEdge(let data):
+                guard state.cyGraph.edges.first(where: {$0.id == data.id}) == nil else{break}
                 state.cyGraph.edges.append(data)
-                return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [], edges: [data]) ) ) ))
+                return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [], edges: [data] , layout: state.cyGraph.layout) ) ) ))
             case .addNode(let data):
+                guard state.cyGraph.nodes.first(where: {$0.id == data.id}) == nil else{break}
                 state.cyGraph.nodes.append(data)
-                return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [data], edges: []) ) ) ))
+                return .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: [data], edges: [] , layout: state.cyGraph.layout) ) ) ))
             case .update(let newGraph):
                 let newNodes = newGraph.nodes.filter{newGraphNode in
                     state.cyGraph.nodes.first { currentGraphNode in
@@ -85,9 +91,15 @@ public struct CyGraphDataReducer : ReducerProtocol{
                     }
                     return false
                 }
+                let updatedLayout : [CyLayout] = (state.cyGraph.layout != newGraph.layout) ? [newGraph.layout] :  []
+                
                 state.cyGraph = newGraph
                 return .concatenate(
-                    .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: newNodes, edges: newEdges) ) ) ))
+                    .send(.joinActionCyCommandReducer(.queueJS(.cyAdd(.init(nodes: newNodes, edges: newEdges , layout: state.cyGraph.layout) ) ) ))
+                    ,
+                    .concatenate(updatedLayout.map({
+                        .send(.joinActionCyCommandReducer(.queueJS(.cyLayout($0))))
+                    }))
                     ,
                     .concatenate(
                         removeClassNodes.flatMap({node in

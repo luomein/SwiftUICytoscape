@@ -11,7 +11,7 @@ import WebKit
 
 
 
-public struct CyCommandReducer : ReducerProtocol{
+public struct CyCommandReducer : Reducer{
     enum wkCoordinatorID : String {
         case defaultValue
     }
@@ -21,7 +21,7 @@ public struct CyCommandReducer : ReducerProtocol{
         self.initGraph = initGraph
         self.initStyle = initStyle
     }
-    public struct State: Equatable{
+    public struct State: Equatable, Hashable{
         public var cytoscapeJavascriptResponseData :CyJsResponse.CyJsResponseData?
         public var joinNotificationReducerState : NotificationReducer<WKScriptMessage>.State = .init()
         public var isDOMContentLoaded : Bool = false
@@ -38,12 +38,13 @@ public struct CyCommandReducer : ReducerProtocol{
         case queueJS(CyJsRequest)
         
     }
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some Reducer<State, Action> {
         Scope(state: \.joinNotificationReducerState, action: /Action.joinActionNotificationReducer, child: {NotificationReducer<WKScriptMessage>(listenNotificationName: .fromCyWKCoordinatorNotification, postNotificationName: .toCyWKCoordinatorNotification, coordinatorID: wkCoordinatorID.defaultValue.rawValue)})
         Reduce{state, action in
             switch action{
             case .queueJS(let value):
                 assert(state.isDOMContentLoaded)
+                assert(state.joinNotificationReducerState.isListening)
                 print(value.jsString)
                 return .send(.joinActionNotificationReducer(.postNotification(value.jsString)))
             case .cytoscapeEvent:

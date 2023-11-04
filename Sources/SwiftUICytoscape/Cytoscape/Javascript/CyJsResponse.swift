@@ -23,7 +23,7 @@ public enum CyJsResponse : String, CaseIterable{
             
         }
     }
-    public struct CyJsResponseData: Decodable, Equatable{
+    public struct CyJsResponseData: Decodable, Equatable, Hashable{
         public var eventType : CyJsResponseEventType
         public var targetId : String
         public var isNode : Bool
