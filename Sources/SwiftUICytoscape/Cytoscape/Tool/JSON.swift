@@ -6,7 +6,8 @@
 //
 
 import Foundation
-
+import Parsing
+import SwiftUI
 //https://developer.apple.com/forums/thread/125891
 //public func jsonStringFromJS(json: Any)->String?{
 //    //let d = try! JSONSerialization.jsonObject(with: Data(json.utf8), options: [])
@@ -26,3 +27,13 @@ public func jsonObjectFromJS<T:Decodable>(json: Any)->T{
     let product = try! decoder.decode(T.self, from: d2)
     return product
 }
+
+//public extension Color{
+//    init(r255: Int, g255: Int, b255:Int){
+//        let r = Double(r255) / 255.0
+//        let g = Double(g255) / 255.0
+//        let b = Double(b255) / 255.0
+//        self = Self.init(red: r, green: g, blue: b)
+//    }
+//}
+

@@ -21,10 +21,18 @@ public struct CyStyleReducerView: View {
             WithViewStore(self.store, observe: {$0}) { viewStore in
                 ColorPicker(selection: viewStore.binding(get: {
                     if let rgb = $0.style[keyPath: colorPickerAttribute]?.hasPrefix("rgb"), rgb == true {
-                        return CyStyle.extractJavascriptRGBValues(from: $0.style[keyPath: colorPickerAttribute]!)
+                        let parser = JavascriptRGBColorParserPrinter()
+                        var colorString = $0.style[keyPath: colorPickerAttribute]!
+                        return try!parser.parse(colorString.utf8).color
+//                        return CyStyle.extractJavascriptRGBValues(from: $0.style[keyPath: colorPickerAttribute]!)
                     }
                     else{
-                        return Color(.init(stringLiteral: $0.style[keyPath: colorPickerAttribute] ?? "black"))
+                        if let colorString = $0.style[keyPath: colorPickerAttribute]{
+                            return Color(.init(stringLiteral: colorString))
+                        }
+                        else{
+                            return Color.black
+                        }
                         
                     }
                 }, send: {color in

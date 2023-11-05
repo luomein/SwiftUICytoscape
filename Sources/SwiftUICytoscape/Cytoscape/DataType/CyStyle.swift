@@ -181,30 +181,30 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
 
     
 }
-public extension CyStyle{
-    static func convertRGBToJavascriptString(color:Color)->String?{
-        guard let components = color.cgColor!.components, components.count >= 3 else {
-               return nil
-           }
-        
-           let red = Int( components[0] * 255)
-           let green = Int(components[1] * 255)
-           let blue = Int( components[2] * 255)
-        //print("rgb(\(red),\(green),\(blue))")
-        return "rgb(\(red),\(green),\(blue))"
-    }
-    static func extractJavascriptRGBValues(from rgbString: String) -> Color {
-        // Remove "rgb(" and ")" from the string and split by commas
-        let numericString = rgbString.replacingOccurrences(of: "rgb(", with: "").replacingOccurrences(of: ")", with: "")
-        let values = numericString.split(separator: ",")
-
-        // Convert the string values to integers
-        let rgb = values.compactMap {
-            
-            
-            return CGFloat(floatLiteral: Double($0.trimmingCharacters(in: .whitespaces))! ) }
-
-        return .init(red: rgb[0]/255
-                     , green: rgb[1]/255, blue: rgb[2]/255 )
-    }
-}
+//public extension CyStyle{
+//    static func convertRGBToJavascriptString(color:Color)->String?{
+//        guard let components = color.cgColor!.components, components.count >= 3 else {
+//               return nil
+//           }
+//
+//           let red = Int( components[0] * 255)
+//           let green = Int(components[1] * 255)
+//           let blue = Int( components[2] * 255)
+//        //print("rgb(\(red),\(green),\(blue))")
+//        return "rgb(\(red),\(green),\(blue))"
+//    }
+//    static func extractJavascriptRGBValues(from rgbString: String) -> Color {
+//        // Remove "rgb(" and ")" from the string and split by commas
+//        let numericString = rgbString.replacingOccurrences(of: "rgb(", with: "").replacingOccurrences(of: ")", with: "")
+//        let values = numericString.split(separator: ",")
+//
+//        // Convert the string values to integers
+//        let rgb = values.compactMap {
+//
+//
+//            return CGFloat(floatLiteral: Double($0.trimmingCharacters(in: .whitespaces))! ) }
+//
+//        return .init(red: rgb[0]/255
+//                     , green: rgb[1]/255, blue: rgb[2]/255 )
+//    }
+//}
