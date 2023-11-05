@@ -562,18 +562,25 @@ struct MultiParentToggleGraphDataTestView_Previews: PreviewProvider {
     static var previews: some View {
         Form{
             MultiParentToggleGraphDataTestView(showColorIndicateViewRefresh: true)
-            CyWKCoordinatorSwiftUIView()
-                .frame(height: 300)
-            
-            Section("listener") {
-                WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState, action: {
-                    MultiParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.joinActionNotificationReducer($0) )
-                    )
-                 })
-                , showColorIndicateViewRefresh: true
-                )
-                
-            }
+            CyWKWrapperView(store:
+                                store.scope(state: \.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState, action: {
+                                                    MultiParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.joinActionNotificationReducer($0) )
+                                                    )
+                                                 })
+            )
+            .frame(height: 300)
+//            CyWKCoordinatorSwiftUIView()
+//                .frame(height: 300)
+//
+//            Section("listener") {
+//                WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState, action: {
+//                    MultiParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.joinActionNotificationReducer($0) )
+//                    )
+//                 })
+//                , showColorIndicateViewRefresh: true
+//                )
+//
+//            }
         }
     }
 }

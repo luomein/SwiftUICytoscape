@@ -20,26 +20,75 @@ public extension Array where Element: Codable {
 ///}).update();
 ///
 public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
-    public enum SystemID: String{
-        case node
-        case edge
-        
-        var name : String{
+//    public enum SystemID: String{
+//        case node
+//        case edge
+//
+//        var name : String{
+//            return self.rawValue
+//        }
+//    }
+    public enum CyStyleSelectorType : String, Codable, Equatable, Hashable, CaseIterable, Identifiable{
+         
+        public var id: String{
             return self.rawValue
         }
+        case node
+        case edge
+        case classSelector = "class"
+        case idSelector = "id"
     }
-    public static var edgeStyle : Self = .init(selector: "edge", style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle),  id:SystemID.edge.rawValue)
-    public static var nodeStyle : Self = .init(selector: "node", style: .init(content: "data(label)",backgroundColor: "rgb(255,0,0)")
-                                               , id:SystemID.node.rawValue)
+    public struct CyStyleSelector: Equatable, Hashable{
+        public var selectorType : CyStyleSelectorType
+        public var value : String = ""
+        public static var hasValueSelectorType : [CyStyleSelectorType]{
+            return [.classSelector, .idSelector]
+        }
+        public var outputValue: String{
+            switch selectorType{
+            case .node, .edge:
+                return selectorType.rawValue
+            case .classSelector:
+                return "."+value
+            case .idSelector:
+                return "#"+value
+            }
+        }
+        public init(selectorType: CyStyleSelectorType, value : String = ""){
+            self.selectorType = selectorType
+            self.value = value
+        }
+        public init(rawValue:String){
+            if let selector = CyStyleSelectorType(rawValue: rawValue){
+                self.selectorType = selector
+            }
+            else{
+                if rawValue.hasPrefix("."){
+                    self.selectorType = .classSelector
+                    self.value = rawValue.replacingOccurrences(of: ".", with: "")
+                }
+                else if rawValue.hasPrefix("#"){
+                    self.selectorType = .idSelector
+                    self.value = rawValue.replacingOccurrences(of: "#", with: "")
+                }
+                else{
+                    fatalError()
+                }
+            }
+        }
+    }
+    public static var edgeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue , style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle),  id:CyStyleSelectorType.edge.id)
+    public static var nodeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .node).outputValue, style: .init(content: "data(label)",backgroundColor: "rgb(255,0,0)")
+                                               , id:CyStyleSelectorType.node.id)
     public static var defaultStyle : [Self] = [nodeStyle,
                                                edgeStyle
                                                //,.init(selector: ".unionGraphData", style: .init(backgroundColor: "red"))
                                                //,.init(selector: ".intersectGraphData", style: .init(backgroundColor: "green"))
                                                  
     ]
-    public static var testStyle : [Self] = [.init(selector: "node", style: .init(content: "data(id)" , shape: .roundTriangle)) ,
-                                           .init(selector: "edge", style: .init(curveStyle: "bezier"))
-    ]
+//    public static var testStyle : [Self] = [.init(selector: CyStyleSelector.init(selectorType: .node).outputValue, style: .init(content: "data(id)" , shape: .roundTriangle)) ,
+//                                           .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue, style: .init(curveStyle: "bezier"))
+//    ]
     
     public var selector : String
     public var style : CyStyleData
@@ -66,7 +115,24 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
             case shape
             case targetArrowShape = "target-arrow-shape"
         }
-        public enum CyTargetArrowShape: String, Codable, Equatable {
+        public enum CyContentExpression: String,Codable, Equatable, CaseIterable, Identifiable{
+            public var id: String{
+                return self.rawValue
+            }
+            case data_id = "data(id)"
+            case data_label = "data(label)"
+            
+            case none
+            public static var allCasesExcluseNone: [Self]{
+                return Self.allCases.filter {
+                    $0 != .none
+                }
+            }
+        }
+        public enum CyTargetArrowShape: String, Codable, Equatable, CaseIterable, Identifiable {
+            public var id: String{
+                return self.rawValue
+            }
             //http://js.cytoscape.org/#style/edge-arrow
             case triangle
             case square
@@ -75,10 +141,41 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
             case chevron
             case none
         }
-        public enum CyShape: String, Codable, Equatable {
+        public enum CyShape: String, Codable, Equatable, CaseIterable, Identifiable {
+            public var id: String{
+                return self.rawValue
+            }
+            public static var allCasesExcluseNone: [Self]{
+                return Self.allCases.filter {
+                    $0 != .none
+                }
+            }
+            case none
+            //https://js.cytoscape.org/#style/node-body
             case ellipse, triangle
             case roundTriangle = "round-triangle"
-            
+            case rectangle
+            case roundRectangle = "round-rectangle"
+            case bottomRoundRectangl = "bottom-round-rectangle"
+            case cutRectangle = "cut-rectangle"
+            case barrel
+            case rhomboid
+            case rightRhomboid = "right-rhomboid"
+            case diamond
+            case roundDiamond = "round-diamond"
+            case pentagon
+            case roundPentagon = "round-pentagon"
+            case hexagon
+            case roundHexagon = "round-hexagon"
+            case concaveHexagon = "concave-hexagon"
+            case heptagon
+            case roundHeptagon = "round-heptagon"
+            case octagon
+            case roundOctagon = "round-octagon"
+            case star
+            case tag
+            case roundTag = "round-tag"
+            case vee
         }
     }
 

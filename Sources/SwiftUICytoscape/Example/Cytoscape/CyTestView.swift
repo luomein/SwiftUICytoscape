@@ -9,6 +9,10 @@ import SwiftUI
 import ComposableArchitecture
 import WebKit
 
+extension CyTestViewReducer{
+    public static var store : StoreOf<Self> = .init(initialState: .init()
+                                                         , reducer: {Self()})
+}
 public struct CyTestViewReducer : Reducer{
     public struct State: Equatable, Hashable{
         var joinCyCommandReducerState : CyCommandReducer.State = .init()
@@ -18,6 +22,7 @@ public struct CyTestViewReducer : Reducer{
     public enum Action : Equatable{
         case joinCyCommandReducerAction(CyCommandReducer.Action)
         case joinCyStyleReducerAction(CyStyleReducer.Action)
+        case randomAdd(layout: CyLayout)
         case queueJS(CyJsRequest)
     }
     public init(){}
@@ -26,6 +31,20 @@ public struct CyTestViewReducer : Reducer{
         Scope(state: \.joinCyStyleReducerState, action: /Action.joinCyStyleReducerAction, child: {CyStyleReducer()})
         Reduce{state, action in
             switch action{
+            case .randomAdd(let layout):
+                let length = 10
+                var nodes : [CyNode] = []
+                var edges : [CyEdge] = []
+                for _ in 1...length {
+                    let r = "\(Int.random(in: 0...10000))"
+                    nodes.append(.init(id: r, label: r))
+                }
+                for _ in 1...length{
+                    let e = "e\(Int.random(in: 0...10000))"
+                    
+                    edges.append(.init(id: e, label: e, source: nodes[Int.random(in: 0..<length)].id, target: nodes[Int.random(in: 0..<length)].id))
+                }
+                return .send(.queueJS(.cyAdd(.init(nodes:nodes, edges:edges, layout:layout))))
             case .joinCyStyleReducerAction(let subAction):
                 return .send(.joinCyCommandReducerAction(.queueJS(.cyStyle([state.joinCyStyleReducerState]))))
             case .queueJS(let value):
@@ -44,23 +63,7 @@ public struct CyTestView: View {
         self.store = store
     }
 
-    var test : some View{
-        WithViewStore(self.store, observe: {$0}) { viewStore in
-            Picker(selection: $layout )
-//                    viewStore.binding( send: {
-//                if let layout = {
-//                    CyTestViewReducer.Action.joinCyCommandReducerAction(.queueJS(.cyLayout( layout)))
-//                }
-//            }))
-            {
-                ForEach(CyLayout.allCases) { value in
-                    Text(value.rawValue)
-                }
-            } label: {
-                Text("layout")
-            }
-        }
-    }
+   
     public var body: some View {
         WithViewStore(self.store, observe: {$0}) { viewStore in
             Form{
@@ -83,16 +86,12 @@ public struct CyTestView: View {
 
                 
                 Button {
-                    //viewStore.send(.clearCanvas)
-                    //return .send(.queueJS(.clearCanvas))
                     viewStore.send(.queueJS(.resetCanvas))
                 } label: {
                     Text("reset")
                 }
                 Button {
-                    //viewStore.send(.clearCanvas)
-                    //return .send(.queueJS(.clearCanvas))
-                    viewStore.send(.queueJS(.cyAdd(.init(nodes: [.init( id: "\(Int.random(in: 0...1000))", label: "\(Int.random(in: 0...1000))")  ], edges: [], layout: layout))))
+                    viewStore.send(.randomAdd(layout: layout))
                 } label: {
                     Text("add")
                 }
@@ -103,31 +102,21 @@ public struct CyTestView: View {
                 }
                 
             }
-            
-            .background {
-                WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyCommandReducerState.joinNotificationReducerState, action: {
-                    CyTestViewReducer.Action.joinCyCommandReducerAction(.joinActionNotificationReducer($0))
-                    //CyGraphReducer.Action.joinActionNotificationReducer($0)
-                    
-                }))
-            }
+
         }
     }
 }
 
 struct CytoscapeWKReducerTestView_Previews: PreviewProvider {
     
-    static var store : StoreOf<CyTestViewReducer> = .init(initialState: .init()
-                                                         , reducer: {
-        
-        CyTestViewReducer()
-        
-        
-    })
+    
     static var previews: some View {
         VStack{
-            CyTestView(store: store)
-            CyWKCoordinatorSwiftUIView()
+            CyTestView(store: CyTestViewReducer.store)
+            CyWKWrapperView(store: CyTestViewReducer.store.scope(state: \.joinCyCommandReducerState.joinNotificationReducerState
+                                               , action: {
+                CyTestViewReducer.Action.joinCyCommandReducerAction(.joinActionNotificationReducer($0))
+            }))
         }
     }
 }
