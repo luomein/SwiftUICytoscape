@@ -77,9 +77,13 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
             }
         }
     }
-    public static var edgeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue , style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: "rgb(255,255,0)",targetArrowShape:.triangle),  id:CyStyleSelectorType.edge.id)
-    public static var nodeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .node).outputValue, style: .init(content: "data(label)",backgroundColor: "rgb(255,0,0)")
-                                               , id:CyStyleSelectorType.node.id)
+    public static var defaultColorString : String {
+        let parser = JavascriptRGBColorParserPrinter()
+        return String(try! parser.print(.init(color: .black)) )!
+    }
+    public static var edgeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue , style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: defaultColorString,targetArrowShape:.triangle))
+    public static var nodeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .node).outputValue, style: .init(content: "data(label)",backgroundColor: defaultColorString)
+                                              )
     public static var defaultStyle : [Self] = [nodeStyle,
                                                edgeStyle
                                                //,.init(selector: ".unionGraphData", style: .init(backgroundColor: "red"))
@@ -90,17 +94,17 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
 //                                           .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue, style: .init(curveStyle: "bezier"))
 //    ]
     
-    public var selector : String
-    public var style : CyStyleData
+    public var selector : String = CyStyleSelector.init(selectorType: .node).outputValue
+    public var style : CyStyleData = .init()
     public var name : String {return selector}
     public var id : String = UUID().uuidString
     
     public struct CyStyleData : Codable, Equatable, Hashable{
-        public var content : String?
+        public var content : String? = CyContentExpression.data_label.rawValue
         public var curveStyle : String?
-        public var backgroundColor : String?
-        public var lineColor : String?
-        public var borderColor : String?
+        public var backgroundColor : String? = defaultColorString
+        public var lineColor : String? = defaultColorString
+        public var borderColor : String? = defaultColorString
         public var backgroundOpacity : String?
         public var shape : CyShape?
         public var targetArrowShape : CyTargetArrowShape = .none

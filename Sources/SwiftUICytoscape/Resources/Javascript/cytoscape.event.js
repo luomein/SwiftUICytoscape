@@ -42,6 +42,7 @@ function addCytoscapeEventListener(cy, isMobile){
             window.webkit.messageHandlers.CytoscapeEvent.postMessage({
             eventType: event.type,
             targetId: event.target.id(),
+            targetLabel: event.target.data('label'),
             isNode: event.target.isNode(),
             isEdge: event.target.isEdge()
             });
@@ -56,6 +57,7 @@ function addCytoscapeEventListener(cy, isMobile){
             window.webkit.messageHandlers.CytoscapeEvent.postMessage({
             eventType: event.type,
             targetId: event.target.id(),
+            targetLabel: event.target.data('label'),
             isNode: event.target.isNode(),
             isEdge: event.target.isEdge()
             });

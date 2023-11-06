@@ -104,7 +104,7 @@ public struct CyGraphDataReducer : Reducer{
                     .concatenate(
                         removeClassNodes.flatMap({node in
                             node.classes!.map({
-                                .send(.joinActionCyCommandReducer(.queueJS(.cyRemoveClass(id: node.id, class: $0) ) ))
+                                .send(.joinActionCyCommandReducer(.queueJS(.cyRemoveClass(id: node.id, class: $0, layout: state.cyGraph.layout) ) ))
                             })
                             
                         })
@@ -113,7 +113,7 @@ public struct CyGraphDataReducer : Reducer{
                     .concatenate(
                         addClassNodes.flatMap({node in
                             node.classes!.map({
-                                .send(.joinActionCyCommandReducer(.queueJS(.cyAddClass(id: node.id, class: $0) ) ))
+                                .send(.joinActionCyCommandReducer(.queueJS(.cyAddClass(id: node.id, class: $0, layout: state.cyGraph.layout) ) ))
                             })
                             
                         })

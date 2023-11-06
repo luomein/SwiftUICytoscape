@@ -9,9 +9,12 @@ import SwiftUI
 import ComposableArchitecture
 import WebKit
 
-struct CyWKWrapperView: View {
+public struct CyWKWrapperView: View {
     let store : StoreOf<NotificationReducer<WKScriptMessage>>
-    var body: some View {
+    public init(store: StoreOf<NotificationReducer<WKScriptMessage>>) {
+        self.store = store
+    }
+    public var body: some View {
         CyWKCoordinatorSwiftUIView()
             .background{
                 WKNotificationReducerSwiftUIView(store: store)

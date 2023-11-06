@@ -26,6 +26,7 @@ public enum CyJsResponse : String, CaseIterable{
     public struct CyJsResponseData: Decodable, Equatable, Hashable{
         public var eventType : CyJsResponseEventType
         public var targetId : String
+        public var targetLabel : String
         public var isNode : Bool
         public var isEdge : Bool
     }

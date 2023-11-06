@@ -31,7 +31,7 @@ public struct CyStyleReducerView: View {
                             return Color(.init(stringLiteral: colorString))
                         }
                         else{
-                            return Color.black
+                            return Color.white
                         }
                         
                     }
@@ -149,7 +149,9 @@ public struct CyStyleReducerView: View {
                     contentPicker
                 }
             } label: {
-                Text("style")
+                WithViewStore(self.store, observe: {$0}) { viewStore in
+                    Text(viewStore.selector)
+                }
             }
 
             
