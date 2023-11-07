@@ -21,7 +21,7 @@ public struct WKNotificationReducerSwiftUIView: View {
         if showColorIndicateViewRefresh{
             Text("showColorIndicateViewRefresh")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(getRandomColor())
+                .background(JavascriptRGBColorParserPrinter.ColorBridge.getRandomColor())
         }
         else{
             Circle()

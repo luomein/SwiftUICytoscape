@@ -79,9 +79,6 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
     @Dependency(\.context) var context
     public struct ToggleGraphDataNode: Identifiable, Equatable{
         public var node : CyNode
-        public var isExpanded : Bool {
-            return nodeStatus.isExpanded
-        }
         public var isVisible : Bool{return nodeStatus.isVisible}
         public var parentNodeID : String?
         public var nodeStatus : NodeStatus = .fullyExpanded
@@ -94,23 +91,21 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
             case placeHolder
             case toggle
             public var cyStyle : CyStyle{
+                let colorParserPrinter = JavascriptRGBColorParserPrinter()
                 switch self{
                 case .fullyExpanded:
-                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: "rgb(25,100,0)"))
+                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: String(try! colorParserPrinter.print(.init(color: .black)) ) ))
                 case .hidden:
-                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: "rgb(25,200,10)"))
+                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: String(try! colorParserPrinter.print(.init(color: .black)) ) ))
                 case .placeHolder:
-                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: "rgb(125,200,110)"))
+                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: String(try! colorParserPrinter.print(.init(color: .gray)) ) , backgroundOpacity: "0.2" ))
                 case .toggle:
-                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: "rgb(25,20,120)"))
+                    return .init(selector: "." + self.rawValue, style: .init(backgroundColor: String(try! colorParserPrinter.print(.init(color: .red)) ) ))
                 }
-            }
-            public var isExpanded : Bool {
-                return self == .fullyExpanded
             }
             public var isVisible : Bool{return self != .hidden}
             static func cascadeNodeStatus(parentNodeStatus: Self, childNodeStatus: Self)->Self{
-                if parentNodeStatus.isExpanded{
+                if parentNodeStatus == .fullyExpanded{
                     if childNodeStatus.isVisible{
                         return childNodeStatus
                     }
@@ -123,18 +118,7 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
                     return .hidden
                 }
             }
-            static func toggleExpanded(status: Self) -> Self{
-                switch status{
-                case .fullyExpanded:
-                    return .toggle
-                case .hidden:
-                    return    .fullyExpanded
-                case .placeHolder:
-                    return .fullyExpanded
-                case .toggle:
-                    return .fullyExpanded
-                }
-            }
+
             static func toggleStatus(status: Self) -> Self{
                 switch status{
                 case .fullyExpanded:
@@ -149,89 +133,52 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
             }
         }
     }
-    public struct ToggleGraphDataNodeReducer : Reducer{
-        public typealias State = ToggleGraphDataNode
-        public enum Action : Equatable{
-            case toggleStatus
-            case toggleExpanded
-            case addChild(from: ToggleGraphDataNode)
-        }
-        public var body: some Reducer<State, Action> {
-            Reduce{state, action in
-                switch action{
-                case .toggleExpanded:
-                    state.nodeStatus = ToggleGraphDataNode.NodeStatus.toggleExpanded(status: state.nodeStatus)
-                    
-                case .toggleStatus:
-                    state.nodeStatus = ToggleGraphDataNode.NodeStatus.toggleStatus(status: state.nodeStatus)
-                case .addChild:
-                    break
-                }
-                return .none
-            }
-        }
-    }
+
     public struct State: Equatable{
         static var defaultStyle = CyStyle.defaultStyle + ToggleGraphDataNode.NodeStatus.allCases.map({$0.cyStyle})
         public var joinCyGraphDataReducerState : CyGraphDataReducer.State = .init(joinCyCommandReducerState: .init()
                                                                                   , joinCyStyleReducerState: IdentifiedArray(uniqueElements: State.defaultStyle)
                                                                                   , cyGraph: .emptyGraph)
         public var nodes : IdentifiedArrayOf<ToggleGraphDataNode> = []
-        
-        
-        
-    }
+     }
     public enum Action : Equatable{
-        case joinActionToggleGraphDataNodeReducer(ToggleGraphDataNodeReducer.State.ID, ToggleGraphDataNodeReducer.Action)
+        case toggleStatus(nodeID: String)
         case joinActionCyGraphDataReducer(CyGraphDataReducer.Action)
-        case add(parent : ToggleGraphDataNode?)
+        case randomAdd
     }
     public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyGraphDataReducerState, action: /Action.joinActionCyGraphDataReducer, child: {CyGraphDataReducer(initGraph: .emptyGraph
                                                                                                                              , initStyle: State.defaultStyle)})
-        
         Reduce{state, action in
             switch action{
-            case .add(let parent):
-                let newID = "\(Int.random(in: 0...1000))"
-                var newNode = ToggleGraphDataNode(node: .init(id: newID, label: newID),  parentNodeID: parent?.id ?? nil)
-                print(newNode)
-                newNode.nodeStatus = .fullyExpanded
-                
-                if state.acceptNewNode(newNode: newNode){
-                    state.nodes.append(newNode)
-                    SingleParentToggleGraphDataReducer.State.bottomUpNodeStatus(node: newNode, initialState: &state)
-                    return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
-                }
-                else{
-                    break
-                }
-            case .joinActionToggleGraphDataNodeReducer(let id, let subAction):
-                switch subAction{
-                case .toggleStatus:
-                    let node = state.nodes[id:id]!
-                    SingleParentToggleGraphDataReducer.State.cascadeNodeStatus(parentNodeList: [node], initialState: &state)
-                    return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
-                case .toggleExpanded:
-                    let node = state.nodes[id:id]!
-                    if node.nodeStatus.isExpanded{
-                        SingleParentToggleGraphDataReducer.State.bottomUpNodeStatus(node: node, initialState: &state)
-                        SingleParentToggleGraphDataReducer.State.cascadeNodeStatus(parentNodeList: [node], initialState: &state)
-                    }else{
-                        SingleParentToggleGraphDataReducer.State.cascadeNodeStatus(parentNodeList: [node], initialState: &state)
+            case .randomAdd:
+                let length = 10
+                for _ in 1...length {
+                    let newID = "\(Int.random(in: 0...1000))"
+                    var parentNodeID : String? = nil
+                    if !state.nodes.isEmpty{
+                        parentNodeID = state.nodes[(Int.random(in: 0..<state.nodes.count)) ].id
                     }
-                    return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
-                case .addChild(let node):
-                    return .send(.add(parent: node))
+                    var newNode = ToggleGraphDataNode(node: .init(id: newID, label: newID),  parentNodeID: parentNodeID)
+                    newNode.nodeStatus = .fullyExpanded
+                    if state.acceptNewNode(newNode: newNode){
+                        state.nodes.append(newNode)
+                        SingleParentToggleGraphDataReducer.State.bottomUpNodeStatus(node: newNode, initialState: &state)
+                    }
                 }
+                return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
+
+            case .toggleStatus(let id):
+                    state.nodes[id:id]!.nodeStatus = ToggleGraphDataNode.NodeStatus.toggleStatus(status: state.nodes[id:id]!.nodeStatus)
+                    SingleParentToggleGraphDataReducer.State.cascadeNodeStatus(parentNodeList: [state.nodes[id:id]!], initialState: &state)
+                    return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
             case .joinActionCyGraphDataReducer(let subAction):
                 switch subAction{
                 case .joinActionCyCommandReducer(let command):
-                    
                     if case .cytoscapeEvent(let event) = command
                         , event.eventType.isClickOrTap
                         , event.isNode{
-                        return .send(.joinActionToggleGraphDataNodeReducer(event.targetId, .toggleStatus) )
+                        return .send(.toggleStatus(nodeID: event.targetId) )
                     }
                     break
                 default:
@@ -241,89 +188,47 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
             }
             return .none
         }
-        .forEach(\.nodes, action: /Action.joinActionToggleGraphDataNodeReducer, element: {ToggleGraphDataNodeReducer()})
+        
     }
 }
-struct SingleParentToggleGraphDataNodeTestView: View {
-    let store : StoreOf<SingleParentToggleGraphDataReducer.ToggleGraphDataNodeReducer>
-    var body: some View {
-        WithViewStore(self.store, observe: {$0}) { viewStore in
-            DisclosureGroup( viewStore.id
-                             , isExpanded: viewStore.binding(get:  \.isExpanded, send: .toggleExpanded )) {
-                Button {
-                    viewStore.send(.addChild(from: viewStore.state))
-                } label: {
-                    Text("add child")
-                }
-            }
-            
-        }
-    }
-}
-public struct SingleParentToggleGraphDataTestView: View {
-    let store : StoreOf<SingleParentToggleGraphDataReducer> = SingleParentToggleGraphDataReducer.store
-    let showColorIndicateViewRefresh : Bool
-    public init(showColorIndicateViewRefresh: Bool = false){
-        self.showColorIndicateViewRefresh = showColorIndicateViewRefresh
+public struct SingleParentToggleGraphHeader: View {
+    let store : StoreOf<SingleParentToggleGraphDataReducer>
+    
+    public init(store: StoreOf<SingleParentToggleGraphDataReducer>) {
+        self.store = store
     }
     public var body: some View {
-        
-        Section
-            {
-                    WithViewStore(self.store, observe: {$0}) { viewStore in
-                        if showColorIndicateViewRefresh{
-                            Text("showColorIndicateViewRefresh")
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(getRandomColor())
-                        }
-                        else{
-                            EmptyView()
-                        }
-                        Button {
-                            viewStore.send(.add(parent: nil))
-                        } label: {
-                            Text("add")
-                        }
-                        
-                        ForEachStore(
-                            self.store.scope(state: \.nodes, action: { .joinActionToggleGraphDataNodeReducer($0, $1) })
-                        ) { subStore in
-                            SingleParentToggleGraphDataNodeTestView(store: subStore)
-                        }
-                    }
-                    
+        WithViewStore(store, observe: {$0}) { viewStore in
+            HStack{
+                Text("Graph")
+                Button {
+                    viewStore.send(.randomAdd)
+                } label: {
+                    Text("add")
                 }
-          
-
-        
+                Button {
+                    viewStore.send(.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.queueJS(.resetCanvas))))
+                } label: {
+                    Text("reset")
+                }
+            }
+        }
     }
-}
-func getRandomColor() -> Color{
-    let alpha : Double = 0.3
-    return .init(red: Double(Int.random(in: 0...255))/255
-                 , green: Double(Int.random(in: 0...255))/255
-                 , blue: Double(Int.random(in: 0...255))/255
-                 , opacity: alpha
-    )
 }
 struct SingleParentToggleGraphDataTestView_Previews: PreviewProvider {
     static let store : StoreOf<SingleParentToggleGraphDataReducer> = SingleParentToggleGraphDataReducer.store
     
     static var previews: some View {
         Form{
-            SingleParentToggleGraphDataTestView(showColorIndicateViewRefresh: true)
-                
-            CyWKCoordinatorSwiftUIView()
-                .frame(height: 300)
-            
-            Section("listener") {
-                WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState, action: {
-                    SingleParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.joinActionNotificationReducer($0) )
-                    )
-                 })
-                , showColorIndicateViewRefresh: true
-                )
-                
+            Section{
+                CyWKWrapperView(store: store.scope(state:\.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState
+                                                   , action: {
+                    SingleParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(
+                        .joinActionCyCommandReducer(.joinActionNotificationReducer($0) ))
+                }))
+                .frame(height: 600)
+            }header: {
+                SingleParentToggleGraphHeader(store: store)
             }
         }
     }

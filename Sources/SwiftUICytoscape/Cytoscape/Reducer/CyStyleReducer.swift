@@ -35,7 +35,7 @@ public struct CyStyleReducer : Reducer{
 //                else{state.style.content = value.rawValue}
             case .setColor(let attribute, let color):
                 let parser = JavascriptRGBColorParserPrinter()
-                state.style[keyPath: attribute] = String(try! parser.print(.init(color: color)) )
+                state.style[keyPath: attribute] = String(try! parser.print(.init(color: UIColor( color ) )) )
                 //CyStyle.convertRGBToJavascriptString(color: color)
             case .setAttribute(let attribute,let value):
                 state.style[keyPath: attribute] = value

@@ -534,7 +534,7 @@ public struct MultiParentToggleGraphDataTestView: View {
                         if showColorIndicateViewRefresh{
                             Text("showColorIndicateViewRefresh")
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(getRandomColor())
+                                .background(JavascriptRGBColorParserPrinter.ColorBridge.getRandomColor())
                         }
                         else{
                             EmptyView()
