@@ -59,6 +59,15 @@ extension SingleParentToggleGraphDataReducer.State{
         assert( node.nodeStatus == .fullyExpanded )
         if node.parentNodeID == nil{return}
         initialState.nodes[id:node.parentNodeID!]!.nodeStatus = .fullyExpanded
+        let childrenNodes = initialState.nodes.filter {
+            return  $0.parentNodeID == node.parentNodeID!
+        }
+        for id in childrenNodes.map({$0.id}){
+            let childNodeStatus = initialState.nodes[id:id]!.nodeStatus
+            let parentNodeStatus = initialState.nodes[id:initialState.nodes[id:id]!.parentNodeID!]!.nodeStatus
+            assert( parentNodeStatus == .fullyExpanded )
+            initialState.nodes[id:id]!.nodeStatus = SingleParentToggleGraphDataReducer.ToggleGraphDataNode.NodeStatus.cascadeNodeStatus(parentNodeStatus:parentNodeStatus,childNodeStatus:childNodeStatus )
+        }
         return bottomUpNodeStatus(node: initialState.nodes[id:node.parentNodeID!]!, initialState: &initialState)
     }
     public static func cascadeNodeStatus(parentNodeList : [SingleParentToggleGraphDataReducer.ToggleGraphDataNode], initialState: inout Self){
@@ -145,14 +154,18 @@ public struct SingleParentToggleGraphDataReducer : Reducer{
         case toggleStatus(nodeID: String)
         case joinActionCyGraphDataReducer(CyGraphDataReducer.Action)
         case randomAdd
+        case resetCanvas
     }
     public var body: some Reducer<State, Action> {
         Scope(state: \.joinCyGraphDataReducerState, action: /Action.joinActionCyGraphDataReducer, child: {CyGraphDataReducer(initGraph: .emptyGraph
                                                                                                                              , initStyle: State.defaultStyle)})
         Reduce{state, action in
             switch action{
+            case .resetCanvas:
+                state.nodes = []
+                return .send(.joinActionCyGraphDataReducer(.update(state.cyGraph) ))
             case .randomAdd:
-                let length = 10
+                let length = 5
                 for _ in 1...length {
                     let newID = "\(Int.random(in: 0...1000))"
                     var parentNodeID : String? = nil
@@ -207,7 +220,7 @@ public struct SingleParentToggleGraphHeader: View {
                     Text("add")
                 }
                 Button {
-                    viewStore.send(.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.queueJS(.resetCanvas))))
+                    viewStore.send(.resetCanvas)
                 } label: {
                     Text("reset")
                 }

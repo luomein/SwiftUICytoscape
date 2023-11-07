@@ -12,25 +12,7 @@ extension MultiParentToggleGraphDataReducer{
     public static let store : StoreOf<MultiParentToggleGraphDataReducer> = .init(initialState: .init(), reducer: {MultiParentToggleGraphDataReducer()})
 }
 extension MultiParentToggleGraphDataReducer.State{
-    //    public static func cascadeNodeStatus(parentNodeList : [MultiParentToggleGraphDataReducer.ToggleGraphDataNode], initialState: inout Self){
-    //        let childrenNodes = initialState.nodes.filter {
-    //            let intersection = Set(parentNodeList.map({$0.id})).intersection($0.parentNodeIDs)
-    //            return !intersection.isEmpty
-    ////            if let parentNodeID = $0.parentNodeID { return parentNodeList.map { $0.id }.contains( parentNodeID )}
-    ////            else{return false}
-    //        }
-    //        if childrenNodes.isEmpty{return}
-    //        childrenNodes.forEach{childNode in
-    //            let childNodeStatus = initialState.nodes[id:childNode.id]!.nodeStatus
-    //            let childNodeParentList = initialState.nodes.filter {
-    //                childNode.parentNodeIDs.contains($0.id)
-    //            }
-    //            let parentNodeStatus = Set(childNodeParentList.map({$0.nodeStatus}))
-    //            initialState.nodes[id:childNode.id]!.nodeStatus = MultiParentToggleGraphDataReducer.ToggleGraphDataNode.NodeStatus.cascadeNodeStatus(parentNodeStatus:parentNodeStatus,childNodeStatus:childNodeStatus )
-    //        }
-    //        return cascadeNodeStatus(parentNodeList: childrenNodes.elements, initialState: &initialState)
-    //    }
-    public static func downTraceRelationInVisible(node: MultiParentToggleGraphDataReducer.ToggleGraphDataNode, initialState: inout Self){
+     public static func downTraceRelationInVisible(node: MultiParentToggleGraphDataReducer.ToggleGraphDataNode, initialState: inout Self){
         let downStream = initialState.getDownStreamRelation(of: node)
         if downStream.isEmpty{return}
         downStream.forEach { relation in
@@ -363,7 +345,7 @@ public struct MultiParentToggleGraphDataReducer : Reducer{
                     break
                 }
                 
-            case .addParent(var child, let parent):
+            case .addParent(let child, let parent):
                 if state.acceptNewRelation(childNode: child, parentNode: parent){
                     state.relations.append(.init(parentNodeID: parent.id, childNodeID: child.id, isVisible: true))
                     MultiParentToggleGraphDataReducer.State.upTraceRelationVisible(node: child, initialState: &state)
@@ -375,7 +357,7 @@ public struct MultiParentToggleGraphDataReducer : Reducer{
                 }
             case .newNode(let parent):
                 let newID = "\(Int.random(in: 0...1000))"
-                var newNode = ToggleGraphDataNode(node: .init(id: newID, label: newID))
+                let newNode = ToggleGraphDataNode(node: .init(id: newID, label: newID))
                 state.nodes.append(newNode)
                 if let parent = parent{
                     if state.acceptNewRelation(childNode: newNode, parentNode: parent){
@@ -484,7 +466,6 @@ struct MultiParentToggleGraphDataNodeTestView: View {
                                             , fromNode: node
                                             , state: viewStore.state)
                       )
-//
                             }
                         }
                     }
@@ -569,18 +550,6 @@ struct MultiParentToggleGraphDataTestView_Previews: PreviewProvider {
                                                  })
             )
             .frame(height: 300)
-//            CyWKCoordinatorSwiftUIView()
-//                .frame(height: 300)
-//
-//            Section("listener") {
-//                WKNotificationReducerSwiftUIView(store: store.scope(state: \.joinCyGraphDataReducerState.joinCyCommandReducerState.joinNotificationReducerState, action: {
-//                    MultiParentToggleGraphDataReducer.Action.joinActionCyGraphDataReducer(.joinActionCyCommandReducer(.joinActionNotificationReducer($0) )
-//                    )
-//                 })
-//                , showColorIndicateViewRefresh: true
-//                )
-//
-//            }
         }
     }
 }

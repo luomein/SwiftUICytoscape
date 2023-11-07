@@ -81,7 +81,7 @@ public struct CyStyle : Codable, Equatable, Identifiable, Hashable{
         let parser = JavascriptRGBColorParserPrinter()
         return String(try! parser.print(.init(color: .black)) )!
     }
-    public static var edgeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue , style: .init(content: "data(label)", curveStyle: "bezier",backgroundColor: defaultColorString,targetArrowShape:.triangle))
+    public static var edgeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .edge).outputValue , style: .init(content: nil , curveStyle: "bezier",targetArrowShape:.triangle))
     public static var nodeStyle : Self = .init(selector: CyStyleSelector.init(selectorType: .node).outputValue, style: .init(content: "data(label)",backgroundColor: defaultColorString)
                                               )
     public static var defaultStyle : [Self] = [nodeStyle,
