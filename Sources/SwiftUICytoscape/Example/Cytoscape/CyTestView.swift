@@ -197,6 +197,7 @@ public struct CyTestGraphHeader: View {
     public var body: some View {
         WithViewStore(store, observe: {$0}) { viewStore in
             HStack{
+                Text("Graph")
                 Button {
                     viewStore.send(.randomAdd(layout: viewStore.layout))
                 } label: {
